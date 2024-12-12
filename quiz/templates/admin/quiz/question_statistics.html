@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="module">
+    <h2>Question Statistics</h2>
+    
+    <div style="margin: 20px 0;">
+        <h3>Overall Statistics</h3>
+        <table style="width: 100%;">
+            <tr>
+                <th>Question Type</th>
+                <th>Total Questions</th>
+                <th>Average Success Rate</th>
+                <th>Average Time (seconds)</th>
+            </tr>
+            {% regroup questions by question_type as question_list %}
+            {% for type in question_list %}
+            <tr>
+                <td>{{ type.grouper.name }}</td>
+                <td>{{ type.list|length }}</td>
+                <td>
+                    {% with success_rate=type.list|average:'success_rate' %}
+                    {{ success_rate|floatformat:2 }}%
+                    {% endwith %}
+                </td>
+                <td>
+                    {% with avg_time=type.list|average:'average_time' %}
+                    {{ avg_time|floatformat:2 }}
+                    {% endwith %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

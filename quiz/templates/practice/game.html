@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Timer and Progress Bar -->
+    <div class="mb-8 bg-white rounded-lg shadow-sm p-4">
+        <div class="flex justify-between items-center mb-4">
+            <!-- Timer -->
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                <span id="timer" class="text-lg font-semibold" data-time="{{ timer }}">
+                    <span id="time-display">{{ timer }}</span>s
+                </span>
+            </div>
+            
+            <!-- Question Counter -->
+            <div class="text-sm text-gray-600">
+                Question {{ progress.current }} of {{ progress.total }}
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: {{ progress.percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- Question Container -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8" data-question-id="{{ question.id }}">
+        <!-- Question Type -->
+        <div class="text-sm text-gray-600 mb-2">
+            {{ question.question_type.name }}
+        </div>
+
+        <!-- Question Context (if exists) -->
+        {% if question.question_context %}
+        <div class="bg-gray-50 rounded-md p-4 mb-4 text-gray-700">
+            {{ question.question_context|linebreaks }}
+        </div>
+        {% endif %}
+
+        <!-- Question Text -->
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            {{ question.text }}
+        </h2>
+
+        <!-- Question Image (if exists) -->
+        {% if question.image %}
+        <div class="mb-6">
+            <img src="{{ question.image.url }}" 
+                 alt="Question Image" 
+                 class="max-w-full rounded-lg shadow-sm">
+        </div>
+        {% endif %}
+
+        <!-- Choices -->
+        <div class="space-y-3" id="choices-container">
+            {% for choice in choices %}
+            <button
+                class="choice-btn w-full text-left px-4 py-3 rounded-md border border-gray-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                data-choice-id="{{ choice.id }}"
+            >
+                {{ choice.text }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the session ID from the URL path
+    const pathParts = window.location.pathname.split('/');
+    const sessionId = pathParts[pathParts.indexOf('game') + 1];
+
+    let startTime = Date.now();
+    let timerInterval;
+    const timerElement = document.getElementById('timer');
+    const timeDisplay = document.getElementById('time-display');
+    let timeRemaining = parseInt(timerElement.dataset.time);
+    
+    // Initialize timer
+    initializeTimer();
+    
+    // Add click handlers to choice buttons
+    document.querySelectorAll('.choice-btn').forEach(button => {
+        button.addEventListener('click', handleAnswer);
+    });
+    
+    function initializeTimer() {
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                handleTimeUp();
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Add warning classes for last 30 seconds
+        if (timeRemaining <= 30) {
+            timeDisplay.classList.add('text-red-600');
+        }
+    }
+    
+    async function handleAnswer(event) {
+        // Prevent double clicks
+        if (event.target.disabled) return;
+        
+        const button = event.target;
+        const questionId = document.querySelector('[data-question-id]').dataset.questionId;
+        const choiceId = button.dataset.choiceId;
+        const timeTaken = Math.round((Date.now() - startTime) / 1000);
+        
+        // Disable all buttons
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+        
+        // Highlight selected answer
+        button.classList.add('border-2', 'border-blue-600', 'bg-blue-50');
+        
+        try {
+            const response = await fetch(`/practice/game/${sessionId}/`, {  // Updated endpoint
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    question_id: questionId,
+                    choice_id: choiceId,
+                    time_taken: timeTaken
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+
+            // Show feedback
+            await showFeedback(data.is_correct);
+            
+            // Update question and progress
+            updateQuestion(data.next_question);
+            updateProgress(data.progress);
+            
+            // Reset timer for next question
+            startTime = Date.now();
+            
+        } catch (error) {
+            console.error('Error submitting answer:', error);
+            alert('There was an error submitting your answer. Please try again.');
+            
+            // Re-enable buttons if there was an error
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        }
+    }
+    
+    async function showFeedback(isCorrect) {
+        const feedbackElement = document.createElement('div');
+        feedbackElement.className = `fixed top-4 right-4 p-4 rounded-md ${
+            isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`;
+        feedbackElement.textContent = isCorrect ? 'Correct!' : 'Incorrect';
+        document.body.appendChild(feedbackElement);
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        feedbackElement.remove();
+    }
+    
+    function updateProgress(progress) {
+        const counterElement = document.querySelector('.text-sm.text-gray-600');
+        const progressBar = document.querySelector('.bg-blue-600');
+        
+        counterElement.textContent = `Question ${progress.current} of ${progress.total}`;
+        progressBar.style.width = `${progress.percentage}%`;
+    }
+    
+    function updateQuestion(questionData) {
+        const container = document.querySelector('[data-question-id]');
+        container.dataset.questionId = questionData.id;
+        
+        // Update question type
+        container.querySelector('.text-sm.text-gray-600').textContent = questionData.question_type;
+        
+        // Update question text
+        container.querySelector('h2').textContent = questionData.text;
+        
+        // Update question context if it exists
+        const contextContainer = container.querySelector('.bg-gray-50');
+        if (contextContainer) {
+            if (questionData.context) {
+                contextContainer.textContent = questionData.context;
+                contextContainer.style.display = 'block';
+            } else {
+                contextContainer.style.display = 'none';
+            }
+        }
+        
+        // Update image if it exists
+        const imageContainer = container.querySelector('img');
+        if (imageContainer) {
+            if (questionData.image_url) {
+                imageContainer.src = questionData.image_url;
+                imageContainer.parentElement.style.display = 'block';
+            } else {
+                imageContainer.parentElement.style.display = 'none';
+            }
+        }
+        
+        // Update choices
+        const choicesContainer = document.getElementById('choices-container');
+        choicesContainer.innerHTML = questionData.choices.map(choice => `
+            <button
+                class="choice-btn w-full text-left px-4 py-3 rounded-md border border-gray-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                data-choice-id="${choice.id}"
+            >
+                ${choice.text}
+            </button>
+        `).join('');
+        
+        // Reattach event listeners
+        document.querySelectorAll('.choice-btn').forEach(button => {
+            button.addEventListener('click', handleAnswer);
+        });
+    }
+    
+    function handleTimeUp() {
+        alert('Time is up!');
+        window.location.href = `/practice/results/${sessionId}/`;
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

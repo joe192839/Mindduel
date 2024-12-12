@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind Test</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
+            <h1 class="text-3xl font-bold text-blue-600 mb-4">
+                Tailwind CSS Test
+            </h1>
+            <p class="text-gray-600 mb-4">
+                If you can see this card with styled text and a blue heading, Tailwind CSS is working correctly!
+            </p>
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Test Button
+            </button>
+        </div>
+    </div>
+</body>
+</html>

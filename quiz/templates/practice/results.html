@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Overall Score Summary Card -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Score -->
+            <div class="text-center p-6 bg-gray-50 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Overall Score</h3>
+                <div class="text-4xl font-bold text-blue-600">{{ session.score|floatformat:1 }}%</div>
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ correct_answers }} out of {{ session.number_of_questions }} correct
+                </p>
+            </div>
+            
+            <!-- Time -->
+            <div class="text-center p-6 bg-gray-50 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Average Time per Question</h3>
+                <div class="text-4xl font-bold text-blue-600">{{ avg_time|floatformat:1 }}s</div>
+                <p class="text-sm text-gray-600 mt-1">
+                    Total time: {{ total_time|floatformat:0 }}s
+                </p>
+            </div>
+            
+            <!-- Difficulty -->
+            <div class="text-center p-6 bg-gray-50 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Performance by Difficulty</h3>
+                <div class="flex justify-center space-x-4">
+                    {% for diff, stats in difficulty_stats.items %}
+                    <div class="text-center">
+                        <div class="text-lg font-semibold 
+                            {% if stats.percentage >= 80 %}text-green-600
+                            {% elif stats.percentage >= 60 %}text-yellow-600
+                            {% else %}text-red-600{% endif %}">
+                            {{ stats.percentage|floatformat:0 }}%
+                        </div>
+                        <div class="text-xs text-gray-500">{{ diff }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance by Question Type -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Performance by Question Type</h2>
+        <div class="space-y-4">
+            {% for type_stat in question_type_stats %}
+            <div class="relative">
+                <div class="flex justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-700">{{ type_stat.name }}</span>
+                    <span class="text-sm font-medium text-gray-700">{{ type_stat.percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="h-2.5 rounded-full transition-all duration-300
+                        {% if type_stat.percentage >= 80 %}bg-green-600
+                        {% elif type_stat.percentage >= 60 %}bg-yellow-600
+                        {% else %}bg-red-600{% endif %}"
+                        style="width: {{ type_stat.percentage }}%">
+                    </div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    {{ type_stat.correct }} correct out of {{ type_stat.total }} questions
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Question Review -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Question Review</h2>
+        <div class="space-y-6" id="question-review">
+            {% for answer in answers %}
+            <div class="border-b border-gray-200 pb-6 last:border-b-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <!-- Question Number -->
+                    <span class="text-sm font-medium text-gray-600">Question {{ forloop.counter }}</span>
+                    
+                    <!-- Correct/Incorrect Icon -->
+                    {% if answer.is_correct %}
+                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {% else %}
+                    <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {% endif %}
+                    
+                    <!-- Time Taken -->
+                    <span class="text-sm text-gray-500 ml-auto">{{ answer.time_taken|floatformat:1 }}s</span>
+                </div>
+
+                <!-- Question Content -->
+                <div class="ml-7">
+                    <!-- Question Type & Difficulty -->
+                    <div class="flex gap-2 text-sm text-gray-600 mb-2">
+                        <span class="px-2 py-1 rounded bg-gray-100">
+                            {{ answer.question.question_type.name }}
+                        </span>
+                        <span class="px-2 py-1 rounded bg-gray-100">
+                            Difficulty: {{ answer.question.get_difficulty_display }}
+                        </span>
+                    </div>
+
+                    <!-- Question Text -->
+                    <p class="text-gray-900 mb-4">{{ answer.question.text }}</p>
+
+                    <!-- Choices -->
+                    <div class="space-y-2 mb-4">
+                        {% for choice in answer.question.choices.all %}
+                        <div class="flex items-center gap-2 p-2 rounded-md
+                            {% if choice.is_correct %}bg-green-50 text-green-700
+                            {% elif choice == answer.selected_choice and not answer.is_correct %}bg-red-50 text-red-700
+                            {% else %}text-gray-700{% endif %}">
+                            {% if choice.is_correct %}
+                            <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            {% elif choice == answer.selected_choice and not answer.is_correct %}
+                            <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            {% endif %}
+                            {{ choice.text }}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Explanation -->
+                    {% if not answer.is_correct %}
+                    <div class="bg-blue-50 text-blue-700 p-4 rounded-md">
+                        <h4 class="font-medium mb-1">Explanation:</h4>
+                        <p>{{ answer.question.explanation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center">
+        <a href="{% url 'quiz:practice_home' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Return to Practice Home
+        </a>
+        <div class="space-x-4">
+            <a href="{% url 'quiz:practice_home' %}?question_types={% for type in session.question_types.all %}{{ type.id }}{% if not forloop.last %},{% endif %}{% endfor %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Practice Similar Questions
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

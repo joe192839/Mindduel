@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Timer and Progress Bar -->
+    <div class="mb-8 bg-white rounded-lg shadow-sm p-4">
+        <div class="flex justify-between items-center mb-4">
+            <!-- Timer -->
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                <span id="timer" class="text-lg font-semibold" data-time="{{ timer }}">
+                    <span id="time-display">{{ timer }}</span>s
+                </span>
+            </div>
+            
+            <!-- Question Counter -->
+            <div class="text-sm text-gray-600">
+                Question {{ progress.current }} of {{ progress.total }}
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: {{ progress.percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- Question Container -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8" data-question-id="{{ question.id }}">
+        <!-- Question Type -->
+        <div class="text-sm text-gray-600 mb-2">
+            {{ question.question_type.name }}
+        </div>
+
+        <!-- Question Context (if exists) -->
+        {% if question.question_context %}
+        <div class="bg-gray-50 rounded-md p-4 mb-4 text-gray-700">
+            {{ question.question_context|linebreaks }}
+        </div>
+        {% endif %}
+
+        <!-- Question Text -->
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            {{ question.text }}
+        </h2>
+
+        <!-- Question Image (if exists) -->
+        {% if question.image %}
+        <div class="mb-6">
+            <img src="{{ question.image.url }}" 
+                 alt="Question Image" 
+                 class="max-w-full rounded-lg shadow-sm">
+        </div>
+        {% endif %}
+
+        <!-- Choices -->
+        <div class="space-y-3" id="choices-container">
+            {% for choice in choices %}
+            <button
+                class="choice-btn w-full text-left px-4 py-3 rounded-md border border-gray-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                data-choice-id="{{ choice.id }}"
+            >
+                {{ choice.text }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Navigation and Submit Buttons -->
+    <div class="flex justify-between items-center">
+        <button id="prev-btn" 
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                {% if progress.current == 1 %}disabled{% endif %}>
+            Previous Question
+        </button>
+
+        <button id="submit-btn" 
+                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                style="display: none;">
+            Submit Quiz
+        </button>
+
+        <button id="next-btn" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Next Question
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pathParts = window.location.pathname.split('/');
+    const sessionId = pathParts[pathParts.indexOf('game') + 1];
+
+    let startTime = Date.now();
+    let timerInterval;
+    const timerElement = document.getElementById('timer');
+    const timeDisplay = document.getElementById('time-display');
+    let timeRemaining = parseInt(timerElement.dataset.time);
+    
+    // Store answers
+    let answers = new Map();
+    let currentQuestionId = document.querySelector('[data-question-id]').dataset.questionId;
+    
+    // Initialize timer
+    initializeTimer();
+    
+    // Add click handlers
+    document.querySelectorAll('.choice-btn').forEach(button => {
+        button.addEventListener('click', handleAnswer);
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', navigateQuestion.bind(null, 'prev'));
+    document.getElementById('next-btn').addEventListener('click', navigateQuestion.bind(null, 'next'));
+    document.getElementById('submit-btn').addEventListener('click', submitQuiz);
+    
+    function initializeTimer() {
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                handleTimeUp();
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining <= 30) {
+            timeDisplay.classList.add('text-red-600');
+        }
+    }
+    
+    async function handleAnswer(event) {
+        if (event.target.disabled) return;
+        
+        const button = event.target;
+        const questionId = document.querySelector('[data-question-id]').dataset.questionId;
+        const choiceId = button.dataset.choiceId;
+        
+        // Store the answer
+        answers.set(questionId, {
+            choice_id: choiceId,
+            time_taken: Math.round((Date.now() - startTime) / 1000)
+        });
+
+        // Update button states
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.classList.remove('border-2', 'border-blue-600', 'bg-blue-50');
+        });
+        button.classList.add('border-2', 'border-blue-600', 'bg-blue-50');
+    }
+
+    async function navigateQuestion(direction) {
+        const currentProgress = parseInt(document.querySelector('.text-sm.text-gray-600').textContent.split(' ')[1]);
+        const totalQuestions = parseInt(document.querySelector('.text-sm.text-gray-600').textContent.split(' ')[3]);
+        
+        if (direction === 'next' && currentProgress === totalQuestions) {
+            // Show submit button when reaching the last question
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/practice/game/${sessionId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    navigate: direction,
+                    current_question: currentQuestionId
+                })
+            });
+
+            if (!response.ok) throw new Error('Navigation failed');
+            
+            const data = await response.json();
+            updateQuestion(data.question);
+            updateProgress(data.progress);
+            updateNavigationButtons(data.progress);
+            
+            // Reset timer for new question
+            startTime = Date.now();
+            
+        } catch (error) {
+            console.error('Navigation error:', error);
+            alert('Error navigating between questions');
+        }
+    }
+
+    async function submitQuiz() {
+        if (!confirm('Are you sure you want to submit your quiz?')) return;
+
+        try {
+            const response = await fetch(`/practice/game/${sessionId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    submit: true,
+                    answers: Object.fromEntries(answers)
+                })
+            });
+
+            if (!response.ok) throw new Error('Submission failed');
+            
+            const data = await response.json();
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Error submitting quiz');
+        }
+    }
+
+    function updateNavigationButtons(progress) {
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        prevBtn.disabled = progress.current === 1;
+        
+        if (progress.current === progress.total) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'block';
+        } else {
+            nextBtn.style.display = 'block';
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    function handleTimeUp() {
+        alert('Time is up! Submitting your quiz...');
+        submitQuiz();
+    }
+    
+    function updateProgress(progress) {
+        const counterElement = document.querySelector('.text-sm.text-gray-600');
+        const progressBar = document.querySelector('.bg-blue-600');
+        
+        counterElement.textContent = `Question ${progress.current} of ${progress.total}`;
+        progressBar.style.width = `${progress.percentage}%`;
+    }
+    
+    function updateQuestion(questionData) {
+        const container = document.querySelector('[data-question-id]');
+        container.dataset.questionId = questionData.id;
+        currentQuestionId = questionData.id;
+        
+        // Update question type
+        container.querySelector('.text-sm.text-gray-600').textContent = questionData.question_type;
+        
+        // Update question text
+        container.querySelector('h2').textContent = questionData.text;
+        
+        // Update context if exists
+        const contextContainer = container.querySelector('.bg-gray-50');
+        if (contextContainer) {
+            if (questionData.context) {
+                contextContainer.textContent = questionData.context;
+                contextContainer.style.display = 'block';
+            } else {
+                contextContainer.style.display = 'none';
+            }
+        }
+        
+        // Update image if exists
+        const imageContainer = container.querySelector('img');
+        if (imageContainer) {
+            if (questionData.image_url) {
+                imageContainer.src = questionData.image_url;
+                imageContainer.parentElement.style.display = 'block';
+            } else {
+                imageContainer.parentElement.style.display = 'none';
+            }
+        }
+        
+        // Update choices
+        const choicesContainer = document.getElementById('choices-container');
+        choicesContainer.innerHTML = questionData.choices.map(choice => `
+            <button
+                class="choice-btn w-full text-left px-4 py-3 rounded-md border border-gray-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                data-choice-id="${choice.id}"
+            >
+                ${choice.text}
+            </button>
+        `).join('');
+        
+        // Reattach event listeners
+        document.querySelectorAll('.choice-btn').forEach(button => {
+            button.addEventListener('click', handleAnswer);
+        });
+
+        // Restore previously selected answer if it exists
+        const savedAnswer = answers.get(questionData.id);
+        if (savedAnswer) {
+            const savedButton = document.querySelector(`[data-choice-id="${savedAnswer.choice_id}"]`);
+            if (savedButton) {
+                savedButton.classList.add('border-2', 'border-blue-600', 'bg-blue-50');
+            }
+        }
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

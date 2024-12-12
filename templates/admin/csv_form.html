@@ -1,0 +1,14 @@
+# templates/admin/csv_form.html
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    <div>
+        <form action="." method="POST" enctype="multipart/form-data">
+            {{ form.as_p }}
+            {% csrf_token %}
+            <button type="submit">Upload CSV</button>
+        </form>
+    </div>
+{% endblock %}
+
+# template for the import for django admins custom csv uploads for quickplay 

@@ -1,0 +1,12 @@
+{# templates/admin/quickplay/quickplayquestion/change_list.html #}
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="import-csv/" class="addlink">
+            Import CSV
+        </a>
+    </li>
+    {{ block.super }}
+{% endblock %}

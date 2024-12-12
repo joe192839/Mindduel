@@ -1,0 +1,130 @@
+<!-- templates/practice/home.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Practice Mode</h1>
+        <p class="mt-2 text-sm text-gray-600">Customize your practice session to focus on specific areas and track your progress.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Practice Setup Form -->
+        <div class="lg:col-span-2">
+            <form method="post" class="space-y-6 bg-white shadow-sm rounded-lg p-6">
+                {% csrf_token %}
+                
+                <!-- Question Types Selection -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Select Question Types</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for question_type in question_types %}
+                        <div class="relative flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="qt_{{ question_type.id }}" 
+                                       name="question_types" 
+                                       type="checkbox"
+                                       value="{{ question_type.id }}"
+                                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="qt_{{ question_type.id }}" class="font-medium text-gray-700">
+                                    {{ question_type.name }}
+                                </label>
+                                <p class="text-gray-500">{{ question_type.description|truncatechars:100 }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Practice Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_number_of_questions" class="block text-sm font-medium text-gray-700">
+                            Number of Questions
+                        </label>
+                        {{ form.number_of_questions }}
+                    </div>
+                    <div>
+                        <label for="id_time_limit" class="block text-sm font-medium text-gray-700">
+                            Time Limit (minutes)
+                        </label>
+                        {{ form.time_limit }}
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" 
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Start Practice
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Cards -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white shadow-sm rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Selected Types Preview</h3>
+                <div class="space-y-4" id="preview-cards">
+                    <!-- Preview cards will be populated via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Practice History -->
+            <div class="bg-white shadow-sm rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Practice Sessions</h3>
+                <div class="space-y-4">
+                    <!-- Add your practice history items here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this script at the end of your template -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Client-side validation
+    const form = document.querySelector('form');
+    const questionTypeInputs = document.querySelectorAll('input[name="question_types"]');
+    
+    form.addEventListener('submit', function(e) {
+        const selectedTypes = Array.from(questionTypeInputs).filter(input => input.checked);
+        
+        if (selectedTypes.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one question type.');
+        }
+    });
+
+    // Update preview cards when checkboxes change
+    questionTypeInputs.forEach(input => {
+        input.addEventListener('change', updatePreviewCards);
+    });
+
+    function updatePreviewCards() {
+        const previewContainer = document.getElementById('preview-cards');
+        previewContainer.innerHTML = '';
+
+        questionTypeInputs.forEach(input => {
+            if (input.checked) {
+                const typeLabel = input.parentElement.nextElementSibling.querySelector('label').textContent;
+                const typeDesc = input.parentElement.nextElementSibling.querySelector('p').textContent;
+                
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 rounded-md p-4';
+                card.innerHTML = `
+                    <h4 class="font-medium text-gray-900">${typeLabel}</h4>
+                    <p class="text-sm text-gray-500 mt-1">${typeDesc}</p>
+                `;
+                previewContainer.appendChild(card);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

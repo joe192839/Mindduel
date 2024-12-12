@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <h1 class="text-3xl font-bold text-center mb-8">IQ Test Practice Setup</h1>
+    
+    <form method="POST" action="{% url 'start_game' %}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        {% csrf_token %}
+        
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-4">Select Question Types</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center">
+                    <input type="checkbox" name="question_types" value="abstract" id="abstract" class="form-checkbox h-5 w-5">
+                    <label for="abstract" class="ml-2">Abstract Reasoning</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="question_types" value="verbal" id="verbal" class="form-checkbox h-5 w-5">
+                    <label for="verbal" class="ml-2">Verbal Reasoning</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="question_types" value="numerical" id="numerical" class="form-checkbox h-5 w-5">
+                    <label for="numerical" class="ml-2">Numerical Reasoning</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="question_types" value="logical" id="logical" class="form-checkbox h-5 w-5">
+                    <label for="logical" class="ml-2">Logical Reasoning</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-4">Game Settings</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="num_questions" class="block text-gray-700 text-sm font-bold mb-2">
+                        Number of Questions
+                    </label>
+                    <select name="num_questions" id="num_questions" required 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">Select number of questions</option>
+                        <option value="1">1 Question</option>
+                        <option value="3">3 Questions</option>
+                        <option value="5">5 Questions</option>
+                        <option value="10">10 Questions</option>
+                        <option value="20">20 Questions</option>
+                        <option value="30">30 Questions</option>
+                        <option value="40">40 Questions</option>
+                        <option value="50">50 Questions</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="time_limit" class="block text-gray-700 text-sm font-bold mb-2">
+                        Time Limit
+                    </label>
+                    <select name="time_limit" id="time_limit" required
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">Select time limit</option>
+                        <option value="5">5 Minutes</option>
+                        <option value="10">10 Minutes</option>
+                        <option value="15">15 Minutes</option>
+                        <option value="20">20 Minutes</option>
+                        <option value="25">25 Minutes</option>
+                        <option value="30">30 Minutes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" 
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Start Practice
+            </button>
+        </div>
+    </form>
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'home' %}" class="text-blue-500 hover:text-blue-700">
+            ← Back to Home
+        </a>
+    </div>
+</div>
+
+{% endblock %}

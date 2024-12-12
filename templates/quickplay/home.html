@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Quick Play - MindDuel{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Force a larger font size for Quick Play title */
+    .quickplay-title {
+        font-size: 4rem !important;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 1s ease-in-out forwards;
+    }
+
+    /* Style checkboxes */
+    input[type="checkbox"] {
+        width: 1.2rem;
+        height: 1.2rem;
+        cursor: pointer;
+        accent-color: #009fdc;
+    }
+
+    /* Hover effect for labels */
+    label {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    label:hover {
+        color: #009fdc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navigation Bar -->
+<nav class="flex justify-between items-center bg-[#121212] p-4 sticky top-0 z-50">
+    <a href="{% url 'home' %}" class="text-2xl font-bold text-white">MindDuel</a>
+    <div class="flex gap-6">
+        <button id="loginButton" class="text-lg text-gray-300 hover:text-white">Login</button>
+        <a href="{% url 'quickplay:home' %}" class="text-lg text-gray-300 hover:text-white">Quickplay</a>
+    </div>
+</nav>
+
+<!-- Quick Play Section -->
+<div class="flex flex-col items-center justify-center min-h-screen text-center px-4 text-white">
+    <!-- Title -->
+    <h1 class="quickplay-title font-bold mb-6 opacity-0 animate-fadeIn delay-[0.5s]">
+        Quickplay
+    </h1>
+
+    <!-- Select Categories -->
+    <p class="text-2xl mb-6 opacity-0 animate-fadeIn delay-[1s]">
+        Select Categories:
+    </p>
+
+    <form id="categoryForm" action="{% url 'quickplay:game' %}" method="GET" class="flex flex-col items-center gap-4 mb-8 opacity-0 animate-fadeIn delay-[1.5s]">
+        <!-- Categories Options -->
+        <div class="space-y-4 bg-[#1e1e1e] p-6 rounded-lg">
+            <label class="flex items-center text-lg hover:text-[#009fdc] transition-colors">
+                <input type="checkbox" name="categories[]" value="reasoning" class="mr-2">
+                Reasoning (Logical)
+            </label>
+            <label class="flex items-center text-lg hover:text-[#009fdc] transition-colors">
+                <input type="checkbox" name="categories[]" value="linguistic" class="mr-2">
+                Linguistic (Verbal)
+            </label>
+            <label class="flex items-center text-lg hover:text-[#009fdc] transition-colors">
+                <input type="checkbox" name="categories[]" value="quantitative" class="mr-2">
+                Quantitative (Numerical)
+            </label>
+            <label class="flex items-center text-lg hover:text-[#009fdc] transition-colors">
+                <input type="checkbox" name="categories[]" value="spatial" class="mr-2">
+                Spatial (Abstract)
+            </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full md:w-auto mt-8 bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-200 transition-all duration-300">
+            Test Your Brain!
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('categoryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const checkboxes = this.querySelectorAll('input[type="checkbox"]:checked');
+        if (checkboxes.length === 0) {
+            alert('Please select at least one category');
+            return;
+        }
+        this.submit();
+    });
+
+    // Login popup functionality
+    const loginButton = document.getElementById('loginButton');
+    const loginPopup = document.getElementById('loginPopup');
+    const popupClose = document.getElementById('popupClose');
+
+    if (loginButton && loginPopup && popupClose) {
+        loginButton.addEventListener('click', () => {
+            loginPopup.classList.add('active');
+        });
+
+        popupClose.addEventListener('click', () => {
+            loginPopup.classList.remove('active');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === loginPopup) {
+                loginPopup.classList.remove('active');
+            }
+        });
+    }
+</script>
+{% endblock %}

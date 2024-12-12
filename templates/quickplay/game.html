@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Quickplay Game - MindDuel{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'League Spartan', sans-serif;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulseRed {
+        0% {
+            color: white;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+        50% {
+            color: rgb(239, 68, 68);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6);
+            transform: scale(1.1);
+        }
+        100% {
+            color: white;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 1s ease-in-out forwards;
+    }
+
+    .final-countdown {
+        animation: pulseRed 1s ease-in-out infinite;
+    }
+
+    /* Feedback Animations */
+    .feedback-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+        font-size: 2rem;
+        font-weight: bold;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 0.5rem;
+        z-index: 20; /* Ensure feedback appears above question */
+    }
+
+    .feedback-overlay.correct {
+        background-color: rgba(34, 197, 94, 0.9);
+        color: white;
+    }
+
+    .feedback-overlay.incorrect {
+        background-color: rgba(239, 68, 68, 0.9);
+        color: white;
+    }
+
+    /* Question container styles */
+    #questionText {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        hyphens: auto;
+        line-height: 1.5;
+        padding: 0 1rem;
+    }
+
+    /* Scrollbar styles */
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Score and lives positioning */
+    .game-header {
+        position: relative;
+        width: 100%;
+        height: 180px; /* Increased height for better spacing */
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 1rem 2rem;
+        margin-bottom: 1rem;
+    }
+
+    #score-container {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    #score {
+        font-size: 7rem;
+        color: white;
+        line-height: 1;
+    }
+
+    #lives {
+        display: flex;
+        gap: 0.5rem;
+        z-index: 10;
+    }
+
+    #lives img {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    #timer {
+        z-index: 10;
+    }
+
+    /* Question area z-index */
+    .question-container {
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Game controls */
+    .game-controls {
+        position: relative;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-[#009fdc] min-h-screen w-full">
+    <!-- Navigation Bar -->
+    <nav class="flex justify-between items-center bg-[#121212] p-4 sticky top-0 z-50">
+        <a href="{% url 'home' %}" class="text-2xl font-bold text-white">MindDuel</a>
+        <div class="flex gap-6">
+            <button id="loginButton" class="text-lg text-gray-300 hover:text-white">Login</button>
+            <a href="{% url 'quickplay:home' %}" class="text-lg text-gray-300 hover:text-white">Quickplay</a>
+        </div>
+    </nav>
+
+    <!-- Game Info (Lives, Points, Time) -->
+    <div class="game-header">
+        <!-- Lives -->
+        <div class="flex items-center">
+            <div id="lives" class="flex">
+                <!-- Hearts will be added by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Points (Centered) -->
+        <div id="score-container">
+            <span id="score" class="font-bold">0</span>
+        </div>
+
+        <!-- Time (Right aligned) -->
+        <div class="text-right">
+            <span id="timer" class="text-white text-3xl font-bold">02:00</span>
+        </div>
+    </div>
+
+    <!-- Question Area -->
+    <div class="bg-[#009fdc] flex justify-center question-container">
+        <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center mt-4 relative flex flex-col min-h-[400px]">
+            <!-- Question Container with fixed height and scroll -->
+            <div class="flex-grow mb-8 overflow-y-auto">
+                <h2 id="questionText" class="text-2xl font-bold text-white opacity-0 animate-fadeIn delay-[0.5s] max-w-xl mx-auto">
+                    Press Start to begin!
+                </h2>
+            </div>
+            
+            <!-- Options Container with fixed position -->
+            <div id="options" class="grid grid-cols-2 gap-4 opacity-0 animate-fadeIn delay-[1s]">
+                <!-- Options will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Controls -->
+    <div class="flex justify-center space-x-4 mt-8 game-controls">
+        <button id="startButton" class="bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
+            Start Game
+        </button>
+        <button id="quitButton" class="hidden bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
+            Quit Game
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.QUICKPLAY_URLS = {
+        startGame: '{% url "quickplay:start_game" %}',
+        getQuestion: '{% url "quickplay:get_question" %}',
+        submitAnswer: '{% url "quickplay:submit_answer" %}',
+        endGame: '/quickplay/api/end-game/',
+        anonymousResults: '{% url "quickplay:anonymous_results" %}',
+        home: '{% url "quickplay:home" %}',
+        results: '/quickplay/results/'
+    };
+    console.log('URLS set:', window.QUICKPLAY_URLS);
+</script>
+
+<!-- Then load game.js -->
+<script defer src="{% static 'quickplay/js/game.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-[#009fdc] min-h-screen w-full">
+    <!-- Navigation Bar -->
+    <nav class="flex justify-between items-center bg-[#121212] p-4 sticky top-0 z-50">
+        <a href="{% url 'home' %}" class="text-2xl font-bold text-white">MindDuel</a>
+        <div class="flex gap-6">
+            <button id="loginButton" class="text-lg text-gray-300 hover:text-white">Login</button>
+            <a href="{% url 'quickplay:home' %}" class="text-lg text-gray-300 hover:text-white">Quickplay</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        {% if user.is_authenticated %}
+            <!-- Game Summary Card -->
+            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 mb-8">
+                <h1 class="text-4xl font-bold mb-8 text-white text-center">Game Results</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Final Score -->
+                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Final Score</h3>
+                        <p class="text-5xl font-bold text-white">{{ game.score }}</p>
+                    </div>
+                    
+                    <!-- Time Taken -->
+                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Time Taken</h3>
+                        <p class="text-5xl font-bold text-white">
+                            {{ game.end_time|timeuntil:game.start_time }}
+                        </p>
+                    </div>
+                    
+                    <!-- Accuracy -->
+                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Accuracy</h3>
+                        <p class="text-5xl font-bold text-white">{{ accuracy|floatformat:1 }}%</p>
+                    </div>
+                </div>
+
+                {% if personal_best %}
+                <div class="bg-[#121212] border-2 border-yellow-400 rounded-lg p-4 text-center animate-pulse">
+                    <p class="text-yellow-400 text-xl font-bold">🏆 New Personal Best! 🏆</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-white">Global Rankings</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-[#121212]">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for score in top_scores %}
+                            <tr {% if score.player == request.user %}class="bg-[#009fdc] bg-opacity-20"{% endif %} class="text-white">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if forloop.counter == 1 %}🥇
+                                    {% elif forloop.counter == 2 %}🥈
+                                    {% elif forloop.counter == 3 %}🥉
+                                    {% else %}{{ forloop.counter }}
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ score.player.username }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold">{{ score.score }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ score.date_achieved|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Question Review -->
+            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-white">Performance Analysis</h2>
+                <div class="space-y-6">
+                    {% for answer in answers %}
+                    <div class="bg-[#121212] rounded-lg p-6 {% if answer.is_correct %}border-l-4 border-green-500{% else %}border-l-4 border-red-500{% endif %}">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-medium text-white">Question {{ forloop.counter }}</h3>
+                            <span class="px-4 py-1 rounded-full text-sm font-bold {% if answer.is_correct %}bg-green-500 text-white{% else %}bg-red-500 text-white{% endif %}">
+                                {% if answer.is_correct %}Correct!{% else %}Incorrect{% endif %}
+                            </span>
+                        </div>
+                        <p class="mb-4 text-white">{{ answer.question.question_text }}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-sm text-gray-400">Your Answer:</p>
+                                <p class="font-medium {% if answer.is_correct %}text-green-400{% else %}text-red-400{% endif %}">
+                                    {{ answer.user_answer }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Correct Answer:</p>
+                                <p class="font-medium text-green-400">{{ answer.question.correct_answer }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 bg-[#1e1e1e] rounded-lg p-4">
+                            <p class="text-sm text-gray-400">Explanation:</p>
+                            <p class="text-white">{{ answer.question.explanation }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <!-- Anonymous User Results -->
+            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 mb-8 text-center">
+                <h1 class="text-4xl font-bold mb-8 text-white">Game Results</h1>
+                
+                <div class="mb-8">
+                    <div class="bg-[#121212] rounded-lg p-8 inline-block">
+                        <h3 class="text-xl font-semibold text-gray-300 mb-4">Final Score</h3>
+                        <p class="text-6xl font-bold text-white">{{ score }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#121212] border-2 border-[#009fdc] rounded-lg p-8 mb-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Want to track your progress?</h3>
+                    <p class="text-gray-300 mb-6">{{ message }}</p>
+                    <a href="{% url 'login' %}" class="inline-block bg-[#009fdc] text-white px-8 py-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 font-bold">
+                        Login Now
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-6">
+            <a href="{% url 'quickplay:home' %}" class="bg-[#121212] text-white px-8 py-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 font-bold">
+                Back to Home
+            </a>
+            <a href="{% url 'quickplay:game' %}" class="bg-[#009fdc] text-white px-8 py-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 font-bold">
+                Play Again
+            </a>
+        </div>
+
+        <!-- Share Results -->
+        <div class="text-center mt-8">
+            <button id="shareButton" class="inline-flex items-center space-x-2 text-white hover:text-[#009fdc] transition-colors duration-300">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/>
+                </svg>
+                <span>Share Results</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButton = document.getElementById('shareButton');
+    if (shareButton) {
+        shareButton.addEventListener('click', async function() {
+            try {
+                const score = {% if user.is_authenticated %}{{ game.score|default:0 }}{% else %}{{ score|default:0 }}{% endif %};
+                const text = `🎮 I just scored ${score} points in MindDuel Quickplay! Can you beat my score? 🏆`;
+                
+                if (navigator.share) {
+                    await navigator.share({
+                        title: 'My MindDuel Score',
+                        text: text,
+                        url: window.location.href
+                    });
+                } else {
+                    await navigator.clipboard.writeText(text);
+                    alert('Results copied to clipboard!');
+                }
+            } catch (err) {
+                console.error('Share failed:', err);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
