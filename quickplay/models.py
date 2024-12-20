@@ -9,11 +9,12 @@ class QuickplayQuestion(models.Model):
     ]
     
     CATEGORY_CHOICES = [
-        ('reasoning', 'Reasoning (Logical)'),
-        ('linguistic', 'Linguistic (Verbal)'),
-        ('quantitative', 'Quantitative (Numerical)'),
-        ('spatial', 'Spatial (Abstract)')
-    ]
+    ('logical_reasoning', 'Logical Reasoning'),
+    ('verbal_linguistic', 'Verbal Linguistic'),
+    ('spatial_reasoning', 'Spatial Reasoning'),
+    ('critical_thinking', 'Critical Thinking')
+]
+    
 
     question_text = models.TextField()
     option_1 = models.CharField(max_length=200)

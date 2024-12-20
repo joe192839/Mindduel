@@ -1,357 +1,778 @@
-// game.js
 console.log('Game.js loaded successfully');
+
+class HeartStateManager {
+    constructor(game) {
+        this.game = game;
+        this.previousLives = 3;
+        this.vignette = null;
+        this.initializeVignette();
+    }
+
+    initializeVignette() {
+        this.vignette = document.createElement('div');
+        this.vignette.className = 'vignette-overlay';
+        document.body.appendChild(this.vignette);
+    }
+
+    updateHeartStates(currentLives) {
+        const hearts = this.game.livesElement.querySelectorAll('.heart-icon');
+        
+        hearts.forEach(heart => {
+            heart.classList.remove('critical-heart', 'warning-heart', 'healthy-heart');
+        });
+
+        switch(currentLives) {
+            case 1:
+                this.applyCriticalState(hearts);
+                break;
+            case 2:
+                this.applyWarningState(hearts);
+                break;
+            case 3:
+                this.applyHealthyState(hearts);
+                break;
+        }
+
+        this.previousLives = currentLives;
+    }
+
+    applyCriticalState(hearts) {
+        hearts.forEach(heart => heart.classList.add('critical-heart'));
+        this.vignette.classList.add('critical-vignette');
+        this.vignette.classList.remove('warning-vignette');
+    }
+
+    applyWarningState(hearts) {
+        hearts.forEach(heart => heart.classList.add('warning-heart'));
+        this.vignette.classList.add('warning-vignette');
+        this.vignette.classList.remove('critical-vignette');
+    }
+
+    applyHealthyState(hearts) {
+        hearts.forEach(heart => heart.classList.add('healthy-heart'));
+        this.vignette.classList.remove('critical-vignette', 'warning-vignette');
+    }
+
+    triggerLifeLossEffects() {
+        this.flashScreen();
+    }
+
+    flashScreen() {
+        const flash = document.createElement('div');
+        flash.className = 'screen-flash';
+        document.body.appendChild(flash);
+        
+        requestAnimationFrame(() => {
+            flash.style.opacity = '1';
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 200);
+            }, 100);
+        });
+    }
+}
 
 class QuickplayGame {
     constructor() {
-        console.log('QuickplayGame initialized'); 
+        // Clean up any existing game instance
+        if (window.quickplayGame) {
+            if (window.quickplayGame.timer) {
+                clearInterval(window.quickplayGame.timer);
+            }
+            window.quickplayGame = null;
+        }
+
+        console.log('QuickplayGame initialized');
         this.gameId = null;
-        this.timeLimit = 120; // 2 minutes in seconds
+        this.questionNumber = 0;
         this.timer = null;
         this.score = 0;
         this.lives = 3;
         this.currentQuestion = null;
         this.isGameActive = false;
+        this.isInTransition = false;
         this.urls = window.QUICKPLAY_URLS;
 
-        // DOM Elements
+        // Timer properties
+        this.progressCircle = null;
+        this.timerText = null;
+        this.circumference = null;
+
+        // Sound setup
+        this.soundEnabled = true;
+        this.correctSound = document.getElementById('correctSound');
+        this.countSound = document.getElementById('countSound');
+        this.startSound = document.getElementById('startSound');
+        this.transitionSound = document.getElementById('transitionSound');
+        this.brainEngageSound = document.getElementById('brainEngageSound');
+
+        // DOM Elements with existence checks
         this.timerElement = document.getElementById('timer');
         this.scoreElement = document.getElementById('score');
         this.livesElement = document.getElementById('lives');
         this.questionElement = document.getElementById('questionText');
         this.optionsContainer = document.getElementById('options');
-        this.startButton = document.getElementById('startButton');
         this.quitButton = document.getElementById('quitButton');
-        this.feedbackModal = document.getElementById('feedbackModal');
-        this.feedbackTitle = document.getElementById('feedbackTitle');
-        this.feedbackText = document.getElementById('feedbackText');
-        this.continueButton = document.getElementById('continueButton');
+        this.startButton = document.getElementById('startButton');
+        this.gameHeader = document.querySelector('.game-header');
 
-        console.log('DOM Elements:', {
-            timer: this.timerElement,
-            score: this.scoreElement,
-            lives: this.livesElement,
-            question: this.questionElement,
-            options: this.optionsContainer,
-            startButton: this.startButton,
-            quitButton: this.quitButton
-        });
+        // Verify critical elements exist
+        if (!this.timerElement || !this.scoreElement || !this.livesElement || 
+            !this.questionElement || !this.optionsContainer) {
+            console.error('Critical game elements not found');
+            return;
+        }
+
+        // Initialize heart state manager
+        this.heartStateManager = new HeartStateManager(this);
+
+        // Add navbar and fullscreen properties
+        this.navbar = document.querySelector('nav');
+        this.isFullscreen = false;
+
+        // Initialize with hidden header
+        if (this.gameHeader) {
+            this.gameHeader.classList.remove('active');
+        }
 
         // Bind event listeners
         if (this.startButton) {
-            console.log('Adding start button listener');
-            this.startButton.addEventListener('click', () => {
-                console.log('Start button clicked');
-                this.startGame();
-            });
-        } else {
-            console.error('Start button not found');
+            this.startButton.addEventListener('click', () => this.startGame());
         }
-
         if (this.quitButton) {
             this.quitButton.addEventListener('click', () => this.endGame('quit'));
         }
-        if (this.continueButton) {
-            this.continueButton.addEventListener('click', () => this.hideFeedback());
-        }
-    }
 
-    updateLivesDisplay() {
-        // Clear existing hearts
-        this.livesElement.innerHTML = '';
-        
-        // Add heart images based on remaining lives
-        for (let i = 0; i < this.lives; i++) {
-            const heartImg = document.createElement('img');
-            heartImg.src = '/static/images/heart.png'; // Path to heart image
-            heartImg.alt = 'Heart';
-            heartImg.style.width = '3rem';
-            heartImg.style.height = '3rem';
-            heartImg.style.marginRight = i < this.lives - 1 ? '0.5rem' : '0';
-            this.livesElement.appendChild(heartImg);
-        }
-    }
+        // Initialize sound toggle
+        const muteButton = document.getElementById('muteButton');
+        const floatingMuteButton = document.getElementById('floatingMuteButton');
 
-    updateDisplay() {
-        this.scoreElement.textContent = this.score;
-        this.updateLivesDisplay();
-        
-        if (this.score > 0 && this.score % 3 === 0) {
-            this.timeLimit -= 15;
-        }
-    }
-
-    async startGame() {
-        console.log('Starting game...');
-        try {
-            console.log('Making start game request to:', this.urls.startGame);
-            const response = await fetch(this.urls.startGame, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                }
+        if (muteButton && floatingMuteButton) {
+            [muteButton, floatingMuteButton].forEach(button => {
+                button.addEventListener('click', () => this.toggleSound());
             });
-            console.log('Start game response:', response);
-            const data = await response.json();
-            console.log('Start game data:', data);
             
-            this.gameId = data.game_id;
-            this.isGameActive = true;
-            this.score = 0;
-            this.lives = 3;
+            const savedSoundState = localStorage.getItem('soundEnabled');
+            if (savedSoundState !== null) {
+                this.soundEnabled = savedSoundState === 'true';
+                this.updateSoundIcon();
+            }
+        }
+
+        // Add ESC key handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isFullscreen) {
+                this.exitFullscreenMode();
+            }
+        });
+
+        // Initialize timer structure
+        this.initializeTimerStructure();
+    }
+
+    enterFullscreenMode() {
+        this.isFullscreen = true;
+        if (this.navbar) {
+            this.navbar.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+            this.navbar.style.transform = 'translateY(-100%)';
+            this.navbar.style.opacity = '0';
+        }
+        document.body.style.paddingTop = '1rem';
+    }
+
+    exitFullscreenMode() {
+        if (!this.isFullscreen) return;
+        
+        this.isFullscreen = false;
+        if (this.navbar) {
+            this.navbar.style.transform = 'translateY(0)';
+            this.navbar.style.opacity = '1';
+        }
+        document.body.style.paddingTop = '0';
+    }
+
+    initializeTimerStructure() {
+        const size = 200;
+        const strokeWidth = 15;
+        const radius = (size - strokeWidth) / 2;
+        
+        if (this.timerElement) {
+            this.timerElement.className = 'timer-container';
+            this.timerElement.innerHTML = `
+                <div class="timer-text">0:00</div>
+                <svg class="timer-circle">
+                    <circle cx="${size/2}" cy="${size/2}" r="${radius}" 
+                            stroke="#334155" stroke-width="${strokeWidth}" fill="none"/>
+                    <circle class="progress-circle" cx="${size/2}" cy="${size/2}" r="${radius}" 
+                            stroke="#22c55e" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round"/>
+                </svg>
+            `;
+        
+            this.progressCircle = this.timerElement.querySelector('.progress-circle');
+            this.timerText = this.timerElement.querySelector('.timer-text');
             
-            // Reset timer display to initial time limit
-            const minutes = Math.floor(this.timeLimit / 60);
-            const seconds = this.timeLimit % 60;
-            this.timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            this.startButton.classList.add('hidden');
-            this.quitButton.classList.remove('hidden');
-            
-            this.startTimer();
-            this.updateDisplay();
-            this.loadQuestion();
-        } catch (error) {
-            console.error('Failed to start game:', error);
-            this.showFeedback('Error', 'Failed to start game. Please try again.');
+            this.circumference = radius * 2 * Math.PI;
+            if (this.progressCircle) {
+                this.progressCircle.style.strokeDasharray = this.circumference;
+            }
         }
     }
 
-    startTimer() {
-        let timeLeft = this.timeLimit;
-        this.timer = setInterval(() => {
-            timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            
-            if (timeLeft <= 10) {
-                this.timerElement.classList.add('final-countdown');
+    getQuestionTimeLimit() {
+        const questionGroup = Math.floor(this.questionNumber / 3);
+        const previousGroup = Math.floor((this.questionNumber - 1) / 3);
+        
+        const oldTimeLimit = (() => {
+            switch (previousGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        const newTimeLimit = (() => {
+            switch (questionGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        if (questionGroup !== previousGroup && this.questionNumber > 1 && !this.isInTransition) {
+            this.triggerDifficultyTransition(oldTimeLimit, newTimeLimit);
+        }
+        
+        return newTimeLimit;
+    }
+
+    getQuestionTimeLimit() {
+        const questionGroup = Math.floor(this.questionNumber / 3);
+        const previousGroup = Math.floor((this.questionNumber - 1) / 3);
+        
+        const oldTimeLimit = (() => {
+            switch (previousGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        const newTimeLimit = (() => {
+            switch (questionGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        // If we're going to transition, return the old time limit until transition is complete
+        if (questionGroup !== previousGroup && this.questionNumber > 1 && !this.isInTransition) {
+            this.triggerDifficultyTransition(oldTimeLimit, newTimeLimit);
+            return oldTimeLimit; // Return old time limit during transition
+        }
+        
+        return newTimeLimit;
+    }
+    
+    // Modify triggerDifficultyTransition to this:
+    triggerDifficultyTransition(oldTimeLimit, newTimeLimit) {
+        // Set transition flag
+        this.isInTransition = true;
+        
+        // Clear existing timer during transition
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        
+        // Add transition classes
+        this.timerElement.classList.add('time-change-pulse');
+        
+        // Update timer display with transition elements
+        this.timerText.innerHTML = `
+            <div class="old-time">${oldTimeLimit}s</div>
+            <div class="new-time">${newTimeLimit}s</div>
+        `;
+        
+        // Play transition sound if enabled
+        if (this.soundEnabled && this.transitionSound) {
+            this.transitionSound.play().catch(err => console.warn('Audio play failed:', err));
+        }
+        
+        // Store the new time limit to use after transition
+        this._nextTimeLimit = newTimeLimit;
+        
+        // After transition completes, reset timer and continue
+        setTimeout(() => {
+            this.isInTransition = false;
+            this.timerElement.classList.remove('time-change-pulse');
+            this.timerText.innerHTML = newTimeLimit + 's';
+            // Start new timer with stored time limit
+            this.startTimer(this._nextTimeLimit);
+            this._nextTimeLimit = null;
+        }, 1500);
+    }
+
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('soundEnabled', this.soundEnabled);
+        this.updateSoundIcon();
+    }
+
+    updateSoundIcon() {
+        const muteButton = document.getElementById('muteButton');
+        const floatingMuteButton = document.getElementById('floatingMuteButton');
+        
+        const icon = this.soundEnabled ? '🔊' : '🔈';
+        
+        if (muteButton) muteButton.textContent = icon;
+        if (floatingMuteButton) floatingMuteButton.textContent = icon;
+    }
+
+    async showBrainWarmup() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'brain-warmup-overlay';
+            overlay.innerHTML = `
+                <div class="brain-warmup-content">
+                    <div class="brain-icon-container">
+                        <svg class="brain-icon" style="width: 16rem; height: 16rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+                            <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                        </svg>
+                        <div class="synapses hidden">
+                            ${[0, 120, 240].map(angle => `
+                                <svg class="synapse" style="width: 4rem; height: 4rem; transform: rotate(${angle}deg) translateY(-40px)" ...>
+                                    <path d="M13 2L3 14h9l-1 8 10-16h-9l1-4z"/>
+                                </svg>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="animation-message text-gray-600" style="font-size: 3rem;">Initializing...</div>
+                    <div class="progress-dots">
+                        ${[...Array(4)].map(() => '<div class="progress-dot"></div>').join('')}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            const brain = overlay.querySelector('.brain-icon');
+            const synapses = overlay.querySelector('.synapses');
+            const message = overlay.querySelector('.animation-message');
+            const dots = overlay.querySelectorAll('.progress-dot');
+
+            let phase = 0;
+
+            const updatePhase = () => {
+                phase++;
+                brain.classList.add('active');
                 
-                document.body.style.backgroundColor = '#dc2626';
+                if (phase > 1) {
+                    synapses.classList.remove('hidden');
+                }
+
+                message.className = 'animation-message';
+                switch(phase) {
+                    case 1:
+                        message.textContent = 'Brain Engaged';
+                        message.classList.add('text-[#009fdc]');
+                        break;
+                    case 2:
+                        message.textContent = 'Synapses Firing';
+                        break;
+                    case 3:
+                        message.textContent = 'Ready For Challenge';
+                        break;
+                    case 4:
+                        message.innerHTML = '<div class="flex items-center justify-center gap-2 text-[#009fdc]"><span>GO</span><span class="animate-bounce">→</span></div>';
+                        break;
+                }
+
+                for (let i = 0; i < phase; i++) {
+                    if (dots[i]) {
+                        dots[i].classList.add('active');
+                    }
+                }
+            };
+
+            setTimeout(() => updatePhase(), 1000);
+            setTimeout(() => updatePhase(), 2000);
+            setTimeout(() => updatePhase(), 3000);
+            setTimeout(() => updatePhase(), 4000);
+
+            setTimeout(() => {
+                overlay.style.animation = 'fadeOut 0.5s forwards';
                 setTimeout(() => {
-                    document.body.style.backgroundColor = '#009fdc';
+                    overlay.remove();
+                    resolve();
+                }, 500);}, 5000);
+            });
+        }
+    
+        async startGame() {
+            console.log('Starting game...');
+            if (this.startButton) {
+                this.startButton.disabled = true;
+            }
+        
+            try {
+                await this.showBrainWarmup();
+                
+                this.enterFullscreenMode();
+                
+                const response = await fetch(this.urls.startGame, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                    }
+                });
+                const data = await response.json();
+                
+                this.gameId = data.game_id;
+                this.isGameActive = true;
+                this.score = 0;
+                this.lives = 3;
+                this.questionNumber = 0;
+                
+                // Reset timer state
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+                this.initializeTimerStructure(); // Re-initialize timer structure
+        
+                // Show game header when game starts
+                if (this.gameHeader) {
+                    this.gameHeader.classList.add('active');
+                }
+                
+                if (this.startButton) {
+                    this.startButton.classList.add('hidden');
+                }
+                if (this.quitButton) {
+                    this.quitButton.classList.remove('hidden');
+                }
+                
+                this.updateDisplay();
+                this.loadQuestion();
+            } catch (error) {
+                console.error('Failed to start game:', error);
+                this.exitFullscreenMode();
+                if (this.startButton) {
+                    this.startButton.disabled = false;
+                }
+                this.showError('Failed to start game. Please try again.');
+            }
+        }
+            
+        updateLivesDisplay() {
+            this.livesElement.innerHTML = '';
+            for (let i = 0; i < this.lives; i++) {
+                const heartImg = document.createElement('img');
+                heartImg.src = '/static/images/heart.png';
+                heartImg.alt = 'Heart';
+                heartImg.style.width = '3rem';
+                heartImg.style.height = '3rem';
+                heartImg.style.marginRight = i < this.lives - 1 ? '0.5rem' : '0';
+                heartImg.classList.add('heart-icon');
+                this.livesElement.appendChild(heartImg);
+            }
+            this.heartStateManager.updateHeartStates(this.lives);
+        }
+    
+        updateDisplay() {
+            this.scoreElement.textContent = this.score;
+            this.updateLivesDisplay();
+        }
+    
+        startTimer(specificTimeLimit = null) {
+            if (this.timer) {
+                clearInterval(this.timer);
+            }
+        
+            let timeLeft = specificTimeLimit || this.getQuestionTimeLimit();
+            const totalTime = timeLeft;
+            
+            const updateTimer = () => {
+                if (!this.isGameActive || this.isInTransition) {
+                    clearInterval(this.timer);
+                    return;
+                }
+        
+                const seconds = timeLeft;
+                
+                // Don't update display if in transition
+                if (!this.timerElement.classList.contains('time-change-pulse')) {
+                    this.timerText.textContent = `0:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                const progress = (timeLeft / totalTime) * 100;
+                const offset = this.circumference - (progress / 100) * this.circumference;
+                this.progressCircle.style.strokeDashoffset = offset;
+                
+                if (progress > 60) {
+                    this.progressCircle.style.stroke = '#22c55e';
+                } else if (progress > 30) {
+                    this.progressCircle.style.stroke = '#eab308';
+                } else {
+                    this.progressCircle.style.stroke = '#dc2626';
+                }
+        
+                if (timeLeft <= 5) {
+                    this.timerText.classList.add('final-countdown');
+                    if (navigator.vibrate) {
+                        navigator.vibrate(100);
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(this.timer);
+                    this.timerText.classList.remove('final-countdown');
+                    this.lives--;
+                    this.updateDisplay();
+                    
+                    if (this.lives <= 0) {
+                        this.endGame('lives');
+                    } else {
+                        this.loadQuestion();
+                    }
+            };
+                
+            };
+    
+            // Only start the timer if we're not in transition
+            if (!this.isInTransition) {
+                this.timer = setInterval(() => {
+                    timeLeft--;
+                    updateTimer();
+                }, 1000);
+                
+                updateTimer();
+            }
+        }
+    
+        async loadQuestion() {
+            try {
+                if (!this.isGameActive) return;
+                
+                this.timerText.classList.remove('final-countdown');
+                document.body.style.backgroundColor = '#009fdc';
+                
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+                
+                const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`);
+                const data = await response.json();
+                
+                if (data.status === 'game_over') {
+                    return this.endGame('complete');
+                }
+                
+                this.optionsContainer.innerHTML = '';
+                this.questionElement.style.opacity = '0';
+                
+                this.questionNumber++;
+                this.currentQuestion = data;
+                
+                setTimeout(() => {
+                    this.questionElement.textContent = data.question_text;
+                    this.questionElement.style.opacity = '1';
+                    
+                    const options = [data.option_1, data.option_2, data.option_3, data.option_4];
+                    
+                    options.forEach((option) => {
+                        const button = document.createElement('button');
+                        button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded hover:bg-gray-100 transition-all duration-300';
+                        button.textContent = option;
+                        button.addEventListener('click', () => this.submitAnswer(option, button));
+                        this.optionsContainer.appendChild(button);
+                    });
+                    
+                    this.optionsContainer.style.opacity = '1';
+                    this.startTimer();
                 }, 100);
                 
-                if (navigator.vibrate) {
-                    navigator.vibrate(100);
-                }
+            } catch (error) {
+                console.error('Failed to load question:', error);
+                this.showError('Failed to load question. Please try again.');
+                this.isGameActive = false;
             }
-
-            this.timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    
+        async submitAnswer(answer, button) {
+            if (!this.isGameActive) return;
+    
+            try {
+                const buttons = this.optionsContainer.querySelectorAll('button');
+                buttons.forEach(btn => btn.disabled = true);
+    
+                const formData = new FormData();
+                formData.append('game_id', this.gameId);
+                formData.append('answer', answer);
+                formData.append('question_id', this.currentQuestion.id);
+    
+                const response = await fetch(this.urls.submitAnswer, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+    
+                const getPointText = (p) => p === 1 ? 'point' : 'points';
             
-            if (timeLeft <= 0) {
+                const overlay = document.createElement('div');
+                overlay.className = `feedback-overlay ${data.correct ? 'correct' : 'incorrect'}`;
+                const points = data.correct ? 1 : 0;
+                overlay.innerHTML = `
+                    <div class="feedback-icon">${data.correct ? '✨' : '❌'}</div>
+                    <div class="feedback-text">${data.correct ? 'Correct!' : 'Incorrect'}</div>
+                    <div class="feedback-score">+${points} ${getPointText(points)}</div>
+                `;
+                
+                this.questionElement.parentElement.appendChild(overlay);
+                requestAnimationFrame(() => overlay.style.opacity = '1');
+                
+                if (data.correct) {
+                    if (this.soundEnabled && this.correctSound) {
+                        this.correctSound.currentTime = 0;
+                        this.correctSound.play().catch(err => console.warn('Audio play failed:', err));
+                    }
+                    this.score = data.score;
+                } else {
+                    const oldLives = this.lives;
+                    this.lives = data.lives;
+                    
+                    const hearts = this.livesElement.querySelectorAll('.heart-icon');
+                    const lastHeart = hearts[hearts.length - 1];
+                    if (lastHeart) {
+                        lastHeart.classList.add('heart-break');
+                        await new Promise(resolve => setTimeout(resolve, 600));
+                    }
+                    
+                    this.updateDisplay();
+                    this.heartStateManager.triggerLifeLossEffects();
+                }
+                
+                this.updateDisplay();
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                if (this.lives <= 0) {
+                    this.endGame('lives');
+                } else {
+                    overlay.remove();
+                    this.loadQuestion();
+                }
+            } catch (error) {
+                console.error('Failed to submit answer:', error);
+                this.showError('Failed to submit answer. Please try again.');
+            }
+        }
+    
+        async endGame(reason = 'unknown') {
+            if (!this.isGameActive) return;
+            
+            this.isGameActive = false;
+            
+            if (this.timer) {
                 clearInterval(this.timer);
-                this.timerElement.classList.remove('final-countdown');
-                this.showFeedback('Time\'s Up!', 'Game Over');
-                setTimeout(() => this.endGame('timeout'), 1500);
-            }
-        }, 1000);
-    }
-
-    async loadQuestion() {
-        try {
-            console.log('Loading question for game:', this.gameId);
-            const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`);
-            const data = await response.json();
-            console.log('Question data:', data);
-            
-            if (data.status === 'game_over') {
-                return this.endGame('complete');
+                this.timer = null;
             }
             
-            this.currentQuestion = data;
-            this.questionElement.textContent = data.question_text;
-            
-            this.optionsContainer.innerHTML = '';
-            const options = [data.option_1, data.option_2, data.option_3, data.option_4];
-            
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded hover:bg-gray-100 transition-all duration-300';
-                button.textContent = option;
-                button.addEventListener('click', () => this.submitAnswer(option, button));
-                this.optionsContainer.appendChild(button);
-            });
-        } catch (error) {
-            console.error('Failed to load question:', error);
-            this.showError('Failed to load question. Please try again.');
-        }
-    }
-
-    async submitAnswer(answer, button) {
-        if (!this.isGameActive) return;
-
-        try {
             const buttons = this.optionsContainer.querySelectorAll('button');
-            buttons.forEach(btn => btn.disabled = true);
-
-            const formData = new FormData();
-            formData.append('game_id', this.gameId);
-            formData.append('answer', answer);
-            formData.append('question_id', this.currentQuestion.id);
-
-            const response = await fetch(this.urls.submitAnswer, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                },
-                body: formData
+            buttons.forEach(button => {
+                button.disabled = true;
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
             });
             
-            const data = await response.json();
+            this.exitFullscreenMode();
             
-            button.classList.add(data.correct ? 'correct' : 'incorrect');
-            
-            const overlay = document.createElement('div');
-            overlay.className = `feedback-overlay ${data.correct ? 'correct' : 'incorrect'}`;
-            overlay.innerHTML = `
-                <div class="feedback-icon">${data.correct ? '✨' : '❌'}</div>
-                <div class="feedback-text">${data.correct ? 'Correct!' : 'Incorrect'}</div>
-                <div class="feedback-score">+${data.correct ? '1' : '0'} points</div>
-            `;
-            
-            this.questionElement.parentElement.appendChild(overlay);
-            requestAnimationFrame(() => overlay.style.opacity = '1');
-            
-            if (data.correct) {
-                const popup = document.createElement('div');
-                popup.className = 'score-popup';
-                popup.textContent = '+1';
-                document.body.appendChild(popup);
-                setTimeout(() => popup.remove(), 1000);
-            }
-
-            if (data.correct) {
-                this.score++;
-            } else {
-                this.lives--;
-                this.livesElement.classList.add('animate-shake');
-                setTimeout(() => this.livesElement.classList.remove('animate-shake'), 500);
+            if (this.gameHeader) {
+                this.gameHeader.classList.remove('active');
             }
             
-            this.updateDisplay();
-            
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            if (this.lives <= 0) {
-                this.endGame();
-            } else {
-                overlay.remove();
-                this.loadQuestion();
-            }
-        } catch (error) {
-            console.error('Failed to submit answer:', error);
-            this.showError('Failed to submit answer. Please try again.');
-        }
-    }
-
-    async endGame(reason = 'unknown') {
-        if (!this.isGameActive) return;
-        console.log('Ending game, reason:', reason);
-        
-        clearInterval(this.timer);
-        this.isGameActive = false;
-
-        this.timerElement.classList.remove('final-countdown');
-        document.body.style.backgroundColor = '#009fdc';
-
-        try {
-            if (this.gameId === 'anonymous') {
-                window.location.href = this.urls.anonymousResults;
-                return;
-            }
-
-            const response = await fetch(`${this.urls.endGame}${this.gameId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const responseText = await response.text();
-            let data;
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             try {
-                data = JSON.parse(responseText);
-            } catch (e) {
-                throw new Error('Invalid response format');
+                const response = await fetch(this.urls.endGame + (this.gameId !== 'anonymous' ? this.gameId + '/' : ''), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: reason,
+                        score: this.score,
+                        lives: this.lives
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else if (this.gameId === 'anonymous') {
+                    window.location.href = this.urls.anonymousResults;
+                } else {
+                    window.location.href = `${this.urls.results}${this.gameId}/`;
+                }
+            } catch (error) {
+                console.error('Error during end game:', error);
+                window.location.href = this.gameId === 'anonymous' ? 
+                    this.urls.anonymousResults : 
+                    this.urls.results;
             }
-
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            } else {
-                window.location.href = `${this.urls.results}${this.gameId}/`;
-            }
-        } catch (error) {
-            console.error('Error during end game:', error);
-            const errorOverlay = document.createElement('div');
-            errorOverlay.className = 'feedback-overlay incorrect';
-            errorOverlay.innerHTML = `
-                <div class="feedback-icon">⚠️</div>
-                <div class="feedback-text">Failed to end game</div>
-                <div class="feedback-score">Error: ${error.message}</div>
-            `;
-            
-            this.questionElement.parentElement.appendChild(errorOverlay);
-            requestAnimationFrame(() => errorOverlay.style.opacity = '1');
-
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            window.location.href = this.gameId === 'anonymous' 
-                ? this.urls.anonymousResults
-                : `${this.urls.results}${this.gameId}/`;
         }
-    }
-
-    showFeedback(title, message) {
-        const overlay = document.createElement('div');
-        overlay.className = `feedback-overlay ${title === 'Correct!' ? 'correct' : 'incorrect'}`;
-        overlay.innerHTML = `
-            <div class="feedback-icon">${title === 'Correct!' ? '✨' : '❌'}</div>
-            <div class="feedback-text">${title}</div>
-            <div class="feedback-score">${message}</div>
-        `;
-        
-        this.questionElement.parentElement.appendChild(overlay);
-        requestAnimationFrame(() => overlay.style.opacity = '1');
-    }
-
-    showError(message) {
-        const overlay = document.createElement('div');
-        overlay.className = 'feedback-overlay incorrect';
-        overlay.innerHTML = `
-            <div class="feedback-icon">⚠️</div>
-            <div class="feedback-text">${message}</div>
-        `;
-        
-        this.questionElement.parentElement.appendChild(overlay);
-        requestAnimationFrame(() => overlay.style.opacity = '1');
-        
-        setTimeout(() => overlay.remove(), 3000);
-    }
-
-    hideFeedback() {
-        if (this.feedbackModal) {
-            this.feedbackModal.classList.add('hidden');
+    
+        showError(message) {
+            console.error(message);
+            alert(message);
         }
-    }
-
-    getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+    
+        getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
         }
-        return cookieValue;
     }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - Initializing QuickplayGame');
-    new QuickplayGame();
-});
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM Content Loaded - Initializing QuickplayGame');
+        window.quickplayGame = new QuickplayGame();
+    });

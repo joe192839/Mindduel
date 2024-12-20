@@ -40,11 +40,13 @@ def quickplay_home(request):
 def quickplay_game(request):
     """Game page view."""
     # Get selected categories from URL parameters
-    selected_categories = request.GET.getlist('categories[]', [])
+    selected_categories = request.GET.getlist('categories')
+    print(f"Selected categories: {selected_categories}")  # Debugging log
     
     # Store categories in session for later use
     request.session['selected_categories'] = selected_categories
     
+    # Initialize context
     context = {
         'selected_categories': selected_categories
     }
@@ -70,7 +72,28 @@ def quickplay_results(request, game_id=None):
     """Results page showing game summary."""
     logger.info(f"Accessing results page with game_id: {game_id}")
     context = {}
-    
+
+    # Get the game state before clearing it
+    game_state = request.session.get('quickplay_game', {})
+    logger.info(f"Session game state: {game_state}")
+
+    # Add top scores to context first
+    context['top_scores'] = Leaderboard.objects.order_by('-score')[:10]
+
+    # Check for game state first (for anonymous users)
+    if game_state and 'score' in game_state:
+        score = game_state.get('score', 0)
+        context.update({
+            'score': score,
+            'message': 'Log in to save your score and track your progress!',
+            'is_anonymous': True
+        })
+        # Clear the game state after using it
+        del request.session['quickplay_game']
+        request.session.modified = True  # Ensure session is saved
+        return render(request, 'quickplay/results.html', context)
+
+    # Then check for authenticated user with game_id
     if request.user.is_authenticated and game_id:
         try:
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
@@ -83,14 +106,12 @@ def quickplay_results(request, game_id=None):
             accuracy = (correct_answers / total_answers * 100) if total_answers > 0 else 0
             
             try:
-                user_rank = Leaderboard.objects.filter(score__gt=game.score).count() + 1
                 user_best_score = Leaderboard.objects.filter(player=request.user)\
                     .order_by('-score').first()
-                personal_best = user_best_score and game.score == user_best_score.score
+                personal_best = user_best_score and game.score >= user_best_score.score
             except DatabaseError:
-                logger.error("Failed to calculate user rank or personal best")
-                user_rank = 1
-                personal_best = True
+                logger.error("Failed to calculate personal best")
+                personal_best = False
 
             context.update({
                 'game': game,
@@ -98,21 +119,20 @@ def quickplay_results(request, game_id=None):
                 'accuracy': accuracy,
                 'total_answers': total_answers,
                 'correct_answers': correct_answers,
-                'top_scores': Leaderboard.objects.order_by('-score')[:10],
-                'user_rank': user_rank,
                 'personal_best': personal_best
             })
         except Exception as e:
             logger.error(f"Error accessing results: {e}")
-            return redirect('quickplay:home')
-    else:
-        game_state = request.session.get('quickplay_game', {})
-        if game_state:
             context.update({
-                'score': game_state.get('score', 0),
-                'message': 'Log in to save your score and track your progress!'
+                'no_game': True,
+                'message': 'No game results found. Try playing a new game!'
             })
-            del request.session['quickplay_game']
+    else:
+        # No game state and no authenticated game
+        context.update({
+            'no_game': True,
+            'message': 'No game results found. Try playing a new game!'
+        })
     
     return render(request, 'quickplay/results.html', context)
 
@@ -134,16 +154,17 @@ def start_game(request):
             game = QuickplayGame.objects.create(
                 player=request.user,
                 start_time=timezone.now(),
-                time_limit=300,
+                time_limit=120,
                 categories=','.join(selected_categories) if selected_categories else ''
             )
-            logger.info(f"Started new game with ID: {game.id} and categories: {selected_categories}")
-            return JsonResponse({'game_id': game.id})
+            logger.info(f"Started new game with ID: {game.id}")
+            return JsonResponse({'game_id': str(game.id)})
         else:
+            # Initialize game state for anonymous user
             game_state = {
                 'score': 0,
                 'lives': 3,
-                'time_limit': 300,
+                'time_limit': 120,
                 'start_time': timezone.now().isoformat(),
                 'answered_questions': [],
                 'categories': selected_categories
@@ -157,35 +178,39 @@ def start_game(request):
 def get_question(request):
     """API endpoint to get a new question."""
     selected_categories = request.session.get('selected_categories', [])
+    print(f"Getting question for categories: {selected_categories}")  # Debug log
+    game_id = request.GET.get('game_id')
     
-    if request.user.is_authenticated:
-        game_id = request.GET.get('game_id')
-        if not game_id:
-            return JsonResponse({'error': 'Game ID required'}, status=400)
-        
+    if request.user.is_authenticated and game_id != 'anonymous':
         try:
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
             if game.is_completed:
+                print("Game is already completed")  # Debug log
                 return JsonResponse({'status': 'game_over'})
             
             answered_questions = QuickplayAnswer.objects.filter(game=game)\
                 .values_list('question_id', flat=True)
+            print(f"Already answered questions: {list(answered_questions)}")  # Debug log
         except Exception as e:
             logger.error(f"Error fetching game data: {e}")
             return JsonResponse({'error': str(e)}, status=500)
     else:
         game_state = request.session.get('quickplay_game', {})
         if not game_state:
+            print("No active game found")  # Debug log
             return JsonResponse({'error': 'No active game'}, status=400)
         answered_questions = game_state.get('answered_questions', [])
     
     try:
-        # Filter questions by category if categories are selected
         questions = QuickplayQuestion.objects.exclude(id__in=answered_questions)
+        print(f"Found {questions.count()} questions before category filter")  # Debug log
+        
         if selected_categories:
             questions = questions.filter(category__in=selected_categories)
+            print(f"Found {questions.count()} questions after category filter")  # Debug log
             
         if not questions.exists():
+            print("No questions found - game over")  # Debug log
             return JsonResponse({'status': 'game_over'})
         
         question = random.choice(list(questions))
@@ -217,7 +242,7 @@ def submit_answer(request):
         question = get_object_or_404(QuickplayQuestion, id=question_id)
         is_correct = answer.lower() == question.correct_answer.lower()
         
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and game_id != 'anonymous':
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
             
             if game.is_completed:
@@ -228,20 +253,18 @@ def submit_answer(request):
                 game=game,
                 question=question,
                 user_answer=answer,
-                is_correct=is_correct
+                is_correct=is_correct,
+                answered_at=timezone.now()
             )
             
             # Update game stats
             if is_correct:
                 game.score += 1
-                if game.score % 3 == 0:
-                    game.time_limit = max(60, game.time_limit - 15)
             else:
-                game.lives_remaining -= 1
+                game.lives_remaining = max(0, game.lives_remaining - 1)
                 if game.lives_remaining <= 0:
                     game.is_completed = True
                     game.end_time = timezone.now()
-                    logger.info(f"Game {game_id} completed due to no lives remaining")
             
             game.save()
             
@@ -249,7 +272,6 @@ def submit_answer(request):
                 'correct': is_correct,
                 'lives': game.lives_remaining,
                 'score': game.score,
-                'time_limit': game.time_limit,
                 'explanation': question.explanation,
                 'correct_answer': question.correct_answer
             })
@@ -263,7 +285,7 @@ def submit_answer(request):
             if is_correct:
                 game_state['score'] = game_state.get('score', 0) + 1
             else:
-                game_state['lives'] = game_state.get('lives', 3) - 1
+                game_state['lives'] = max(0, game_state.get('lives', 3) - 1)
             
             # Track answered questions
             answered_questions = game_state.get('answered_questions', [])
@@ -271,6 +293,7 @@ def submit_answer(request):
             game_state['answered_questions'] = answered_questions
             
             request.session['quickplay_game'] = game_state
+            request.session.modified = True  # Ensure session is saved
             
             return JsonResponse({
                 'correct': is_correct,
@@ -287,57 +310,48 @@ def submit_answer(request):
 def end_game(request, game_id=None):
     """API endpoint to end a game."""
     logger.info(f"End game called with game_id: {game_id}")
-    logger.info(f"Request method: {request.method}")
-    logger.info(f"User authenticated: {request.user.is_authenticated}")
 
-    if request.user.is_authenticated and game_id:
-        try:
+    try:
+        # Check for anonymous users first
+        if game_id == 'anonymous' or not request.user.is_authenticated:
+            game_state = request.session.get('quickplay_game', {})
+            if game_state:
+                logger.info("Redirecting anonymous user to results")
+                # Don't delete the game state here - let the results view handle it
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect': reverse('quickplay:anonymous_results')
+                })
+
+        # Handle authenticated users
+        if request.user.is_authenticated and game_id and game_id != 'anonymous':
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
-            logger.info(f"Found game: {game.id}")
-            
             if not game.is_completed:
                 game.is_completed = True
                 game.end_time = timezone.now()
                 game.save()
-                logger.info("Game marked as completed")
                 
                 time_taken = (game.end_time - game.start_time).seconds
-                try:
-                    Leaderboard.objects.create(
-                        player=request.user,
-                        score=game.score,
-                        time_taken=time_taken
-                    )
-                    logger.info("Created leaderboard entry")
-                except DatabaseError as e:
-                    logger.error(f"Failed to create leaderboard entry: {e}")
+                Leaderboard.objects.create(
+                    player=request.user,
+                    score=game.score,
+                    time_taken=time_taken
+                )
             
-            results_url = reverse('quickplay:results', kwargs={'game_id': game_id})
-            logger.info(f"Generated results URL: {results_url}")
-            
+            logger.info(f"Redirecting authenticated user to results with game_id: {game_id}")
             return JsonResponse({
                 'status': 'success',
-                'redirect': results_url
-            })
-            
-        except Exception as e:
-            logger.error(f"Error in end_game: {e}")
-            return JsonResponse({
-                'status': 'error',
-                'redirect': reverse('quickplay:home')
-            })
-    else:
-        # Handle anonymous users
-        game_state = request.session.get('quickplay_game', {})
-        if game_state:
-            logger.info("Processing anonymous game end")
-            results_url = reverse('quickplay:anonymous_results')
-            return JsonResponse({
-                'status': 'success',
-                'redirect': results_url
+                'redirect': reverse('quickplay:results', kwargs={'game_id': game_id})
             })
         
-        logger.warning("No active game found")
+        logger.warning("No valid game state found, redirecting to home")
+        return JsonResponse({
+            'status': 'error',
+            'redirect': reverse('quickplay:home')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in end_game: {e}")
         return JsonResponse({
             'status': 'error',
             'redirect': reverse('quickplay:home')

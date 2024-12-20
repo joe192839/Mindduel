@@ -91,10 +91,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Updated STATICFILES configuration
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Changed from theme/static to static
-    os.path.join(BASE_DIR, 'theme/static'),  # Keep this for Tailwind
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'theme/static'),
+    os.path.join(BASE_DIR, 'quickplay/static'),
 ]
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+# Add file extensions and MIME types
+STATICFILES_EXTENSIONS = ['js', 'jsx', 'css']
+
+MIME_TYPES = {
+    'mp3': 'audio/mpeg',
+    'jsx': 'text/javascript',
+    'js': 'text/javascript',
+}
 
 # Tailwind configuration
 TAILWIND_APP_NAME = 'theme'

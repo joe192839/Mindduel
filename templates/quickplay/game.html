@@ -1,49 +1,320 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Quickplay Game - MindDuel{% endblock %}
-
 {% block extra_css %}
 <style>
     body {
         font-family: 'League Spartan', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent scrolling */
     }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* Main container for fixed viewport */
+    .game-wrapper {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #009fdc;
+        overflow: hidden;
     }
 
-    @keyframes pulseRed {
-        0% {
-            color: white;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
-        50% {
-            color: rgb(239, 68, 68);
-            text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6);
-            transform: scale(1.1);
-        }
-        100% {
-            color: white;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
+    .game-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        padding-top: 1rem; /* Add some padding at the top since we removed the nav */
     }
 
-    .animate-fadeIn {
-        animation: fadeIn 1s ease-in-out forwards;
+    /* Brain Warmup Animation Styles */
+    .brain-warmup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .brain-warmup-content {
+        text-align: center;
+    }
+    .brain-icon-container {
+        position: relative;
+        margin-bottom: 2rem;
+        height: 16rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .brain-icon {
+        color: #4b5563;
+        transition: color 0.7s ease, filter 0.7s ease;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .brain-icon.active {
+        color: #009fdc;
+        filter: drop-shadow(0 0 10px rgba(0, 159, 220, 0.3));
+    }
+    .synapses {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .synapse {
+        position: absolute;
+        color: #facc15;
+        opacity: 0;
+        animation: synapseFlash 2s infinite;
+    }
+    .animation-message {
+        font-weight: bold;
+        margin-bottom: 1rem;
+        transition: all 0.5s ease;
+        min-height: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .progress-dots {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    .progress-dot {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 9999px;
+        background-color: #4b5563;
+        transition: all 0.3s ease;
+    }
+    .progress-dot.active {
+        background-color: #009fdc;
+        transform: scale(1.1);
+    }
+  
+    /* Timer Styles */
+    .timer-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0em;
+        transform: translateX(-5rem);
+        will-change: transform, opacity;
     }
 
-    .final-countdown {
-        animation: pulseRed 1s ease-in-out infinite;
+    .timer-circle {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+        will-change: transform;
     }
 
-    /* Feedback Animations */
+    .timer-circle circle {
+        transition: stroke-dashoffset 0.5s ease-in-out, stroke 0.5s ease-in-out;
+        stroke-width: 15px;
+        will-change: stroke-dashoffset, stroke;
+    }
+
+    .timer-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        will-change: transform, opacity;
+    }
+
+    /* Game Header Layout */
+    .game-header {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .game-header.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    #lives {
+        display: flex;
+        gap: 0.75rem;
+        z-index: 10;
+        margin-top: 0rem;
+        transform: translateX(3rem);
+    }
+
+    #score-container {
+        position: absolute;
+        left: 50%;
+        top: 55%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    #score {
+        font-size: 12rem;
+        color: white;
+        line-height: 1;
+    }
+
+    /* Heart Icons Enhancement */
+    .heart-icon {
+        width: 5rem !important;
+        height: 5rem !important;
+        filter: drop-shadow(0 0 10px rgba(255, 0, 0, 1));
+        transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .heart-icon:hover {
+        transform: scale(1.1);
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    /* Heart States */
+    .critical-heart {
+        animation: criticalPulse 1s ease-in-out infinite;
+        filter: drop-shadow(0 0 12px rgba(255, 0, 0, 1));
+    }
+    
+    .warning-heart {
+        animation: warningPulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 10px rgba(255, 165, 0, 1));
+    }
+    
+    .healthy-heart {
+        animation: healthyFloat 3s ease-in-out infinite;
+        filter: drop-shadow(0 0 8px rgba(255, 0, 0, 1));
+    }
+    
+    .heart-break {
+        animation: heartBreak 0.6s ease-in forwards;
+    }
+
+    /* Timer Animation Styles */
+    .time-change-pulse {
+        animation: pulseBorder 1.5s ease-in-out;
+        will-change: filter;
+    }
+
+    .old-time {
+        animation: fadeOut 0.5s forwards;
+        position: absolute;
+        will-change: transform, opacity;
+    }
+
+    .new-time {
+        animation: fadeIn 0.5s 0.3s forwards;
+        opacity: 0;
+        will-change: transform, opacity;
+    }
+
+    /* Question Container Styles */
+    .question-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        padding: 0 1rem;
+        overflow: hidden;
+    }
+    
+    .question-container > div {
+        background: #1e1e1e;
+        border-radius: 0 12px 12px 0;
+        border-left: 4px solid #009fdc;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        position: relative;
+        padding: 2rem;
+        width: 100%;
+        max-width: 2xl;
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
+    }
+    
+    .question-container > div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #009fdc, rgba(0, 159, 220, 0.1));
+    }
+    
+    #questionText {
+        color: white;
+        position: relative;
+        z-index: 1;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 159, 220, 0.1);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    #options button {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(0, 159, 220, 0.2);
+        border-radius: 8px;
+        color: white;
+        transition: all 0.2s ease;
+        padding: 1rem;
+        text-align: left;
+        position: relative;
+    }
+    
+    #options button::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: #009fdc;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        border-radius: 4px 0 0 4px;
+    }
+    
+    #options button:hover {
+        background: rgba(0, 159, 220, 0.1);
+        transform: translateX(4px);
+    }
+    
+    #options button:hover::before {
+        opacity: 1;
+    }
+
     .feedback-overlay {
         position: absolute;
         top: 0;
@@ -60,163 +331,168 @@
         opacity: 0;
         transition: opacity 0.3s ease;
         border-radius: 0.5rem;
-        z-index: 20; /* Ensure feedback appears above question */
+        z-index: 20;
     }
-
+    
     .feedback-overlay.correct {
         background-color: rgba(34, 197, 94, 0.9);
         color: white;
     }
-
+    
     .feedback-overlay.incorrect {
         background-color: rgba(239, 68, 68, 0.9);
         color: white;
     }
 
-    /* Question container styles */
-    #questionText {
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-        hyphens: auto;
-        line-height: 1.5;
-        padding: 0 1rem;
+    .final-countdown {
+        animation: pulseRed 1s ease-in-out infinite;
+        font-size: 3.25rem;
+        text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
     }
 
-    /* Scrollbar styles */
-    .overflow-y-auto::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .overflow-y-auto::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-    }
-
-    .overflow-y-auto::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-    }
-
-    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* Score and lives positioning */
-    .game-header {
-        position: relative;
-        width: 100%;
-        height: 180px; /* Increased height for better spacing */
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: 1rem 2rem;
-        margin-bottom: 1rem;
-    }
-
-    #score-container {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-    }
-
-    #score {
-        font-size: 7rem;
-        color: white;
-        line-height: 1;
-    }
-
-    #lives {
-        display: flex;
-        gap: 0.5rem;
-        z-index: 10;
-    }
-
-    #lives img {
-        width: 3rem;
-        height: 3rem;
-    }
-
-    #timer {
-        z-index: 10;
-    }
-
-    /* Question area z-index */
-    .question-container {
-        position: relative;
-        z-index: 10;
-    }
-
-    /* Game controls */
+    /* Game Controls modifications */
     .game-controls {
-        position: relative;
-        z-index: 10;
+        padding: 1rem 0;
+        flex-shrink: 0;
+    }
+
+    /* Animations */
+    @keyframes synapseFlash {
+        0% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+        100% { opacity: 0.3; transform: scale(0.8); }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    
+    @keyframes heartBreak {
+        0% { transform: scale(1); opacity: 1; }
+        20% { transform: scale(1.2); }
+        40% { transform: scale(0.9) rotate(15deg); }
+        60% { transform: scale(0.8) rotate(-15deg); }
+        80% { transform: scale(0.6); opacity: 0.5; }
+        100% { transform: scale(0) rotate(20deg); opacity: 0; }
+    }
+    
+    @keyframes criticalPulse {
+        0% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.4)); }
+        50% { transform: scale(1.15); filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.6)); }
+        100% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.4)); }
+    }
+    
+    @keyframes warningPulse {
+        0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.4)); }
+        50% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.5)); }
+        100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.4)); }
+    }
+    
+    @keyframes healthyFloat {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
+    }
+    
+    @keyframes pulseRed {
+        0% {
+            color: white;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+        50% {
+            color: rgb(239, 68, 68);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6);
+            transform: scale(1.1);
+        }
+        100% {
+            color: white;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+    }
+
+    @keyframes pulseBorder {
+        0% { filter: drop-shadow(0 0 0 #ff4444); }
+        50% { filter: drop-shadow(0 0 15px #ff4444); }
+        100% { filter: drop-shadow(0 0 0 #ff4444); }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="bg-[#009fdc] min-h-screen w-full">
-    <!-- Navigation Bar -->
-    <nav class="flex justify-between items-center bg-[#121212] p-4 sticky top-0 z-50">
-        <a href="{% url 'home' %}" class="text-2xl font-bold text-white">MindDuel</a>
-        <div class="flex gap-6">
-            <button id="loginButton" class="text-lg text-gray-300 hover:text-white">Login</button>
-            <a href="{% url 'quickplay:home' %}" class="text-lg text-gray-300 hover:text-white">Quickplay</a>
-        </div>
-    </nav>
+<div class="game-wrapper">
+    <!-- Audio Elements -->
+    <audio id="correctSound">
+        <source src="{% static 'quickplay/audio/correct_answer.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="countSound">
+        <source src="{% static 'quickplay/audio/count.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="startSound">
+        <source src="{% static 'quickplay/audio/start.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="transitionSound">
+        <source src="{% static 'quickplay/audio/transition.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="brainEngageSound">
+        <source src="{% static 'quickplay/audio/brain_engage.mp3' %}" type="audio/mpeg">
+    </audio>
 
-    <!-- Game Info (Lives, Points, Time) -->
-    <div class="game-header">
-        <!-- Lives -->
-        <div class="flex items-center">
-            <div id="lives" class="flex">
-                <!-- Hearts will be added by JavaScript -->
+    <div class="game-content">
+        <!-- Game Info (Lives, Points, Time) -->
+        <div class="game-header">
+            <div class="flex items-center">
+                <div id="lives" class="flex">
+                    <!-- Hearts will be added by JavaScript -->
+                </div>
+            </div>
+            <div id="score-container">
+                <span id="score" class="font-bold">0</span>
+            </div>
+            <div class="text-right">
+                <div id="timer"></div>
             </div>
         </div>
 
-        <!-- Points (Centered) -->
-        <div id="score-container">
-            <span id="score" class="font-bold">0</span>
-        </div>
-
-        <!-- Time (Right aligned) -->
-        <div class="text-right">
-            <span id="timer" class="text-white text-3xl font-bold">02:00</span>
-        </div>
-    </div>
-
-    <!-- Question Area -->
-    <div class="bg-[#009fdc] flex justify-center question-container">
-        <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center mt-4 relative flex flex-col min-h-[400px]">
-            <!-- Question Container with fixed height and scroll -->
-            <div class="flex-grow mb-8 overflow-y-auto">
-                <h2 id="questionText" class="text-2xl font-bold text-white opacity-0 animate-fadeIn delay-[0.5s] max-w-xl mx-auto">
-                    Press Start to begin!
-                </h2>
-            </div>
-            
-            <!-- Options Container with fixed position -->
-            <div id="options" class="grid grid-cols-2 gap-4 opacity-0 animate-fadeIn delay-[1s]">
-                <!-- Options will be inserted here -->
+        <!-- Question Area -->
+        <div class="question-container">
+            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center relative flex flex-col min-h-[400px]">
+                <div class="flex-grow mb-8 overflow-y-auto">
+                    <h2 id="questionText" class="text-2xl font-bold text-white opacity-0 animate-fadeIn delay-[0.5s] max-w-xl mx-auto">
+                        Press Start to begin!
+                    </h2>
+                </div>
+                <div id="options" class="grid grid-cols-2 gap-4 opacity-0 animate-fadeIn delay-[1s]">
+                    <!-- Options will be inserted here -->
+                </div>
             </div>
         </div>
+
+        <!-- Game Controls -->
+        <div class="flex justify-center space-x-4 p-4 game-controls">
+            <button id="startButton" class="bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
+                Start Game
+            </button>
+            <button id="quitButton" class="hidden bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
+                Quit Game
+            </button>
+        </div>
     </div>
 
-    <!-- Game Controls -->
-    <div class="flex justify-center space-x-4 mt-8 game-controls">
-        <button id="startButton" class="bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
-            Start Game
-        </button>
-        <button id="quitButton" class="hidden bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
-            Quit Game
-        </button>
-    </div>
+    <!-- Floating mute button -->
+    <button id="floatingMuteButton" class="absolute bottom-4 right-4 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-gray-100 transition-all duration-300 z-9999" aria-label="Toggle sound">
+        🔊
+    </button>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Game Configuration -->
 <script>
     window.QUICKPLAY_URLS = {
         startGame: '{% url "quickplay:start_game" %}',
@@ -227,9 +503,7 @@
         home: '{% url "quickplay:home" %}',
         results: '/quickplay/results/'
     };
-    console.log('URLS set:', window.QUICKPLAY_URLS);
 </script>
-
-<!-- Then load game.js -->
+<!-- Game Logic -->
 <script defer src="{% static 'quickplay/js/game.js' %}"></script>
 {% endblock %}
