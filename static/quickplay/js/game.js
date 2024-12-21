@@ -101,10 +101,7 @@ class QuickplayGame {
         // Sound setup
         this.soundEnabled = true;
         this.correctSound = document.getElementById('correctSound');
-        this.countSound = document.getElementById('countSound');
-        this.startSound = document.getElementById('startSound');
-        this.transitionSound = document.getElementById('transitionSound');
-        this.brainEngageSound = document.getElementById('brainEngageSound');
+        this.wrongSound = document.getElementById('wrongSound');
 
         // DOM Elements with existence checks
         this.timerElement = document.getElementById('timer');
@@ -255,79 +252,27 @@ class QuickplayGame {
         return newTimeLimit;
     }
 
-    getQuestionTimeLimit() {
-        const questionGroup = Math.floor(this.questionNumber / 3);
-        const previousGroup = Math.floor((this.questionNumber - 1) / 3);
-        
-        const oldTimeLimit = (() => {
-            switch (previousGroup) {
-                case 0: return 60;
-                case 1: return 50;
-                case 2: return 40;
-                case 3: return 30;
-                case 4: return 20;
-                case 5: return 15;
-                case 6: return 10;
-                default: return 5;
-            }
-        })();
-        
-        const newTimeLimit = (() => {
-            switch (questionGroup) {
-                case 0: return 60;
-                case 1: return 50;
-                case 2: return 40;
-                case 3: return 30;
-                case 4: return 20;
-                case 5: return 15;
-                case 6: return 10;
-                default: return 5;
-            }
-        })();
-        
-        // If we're going to transition, return the old time limit until transition is complete
-        if (questionGroup !== previousGroup && this.questionNumber > 1 && !this.isInTransition) {
-            this.triggerDifficultyTransition(oldTimeLimit, newTimeLimit);
-            return oldTimeLimit; // Return old time limit during transition
-        }
-        
-        return newTimeLimit;
-    }
-    
-    // Modify triggerDifficultyTransition to this:
     triggerDifficultyTransition(oldTimeLimit, newTimeLimit) {
-        // Set transition flag
         this.isInTransition = true;
         
-        // Clear existing timer during transition
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
         }
         
-        // Add transition classes
         this.timerElement.classList.add('time-change-pulse');
         
-        // Update timer display with transition elements
         this.timerText.innerHTML = `
             <div class="old-time">${oldTimeLimit}s</div>
             <div class="new-time">${newTimeLimit}s</div>
         `;
         
-        // Play transition sound if enabled
-        if (this.soundEnabled && this.transitionSound) {
-            this.transitionSound.play().catch(err => console.warn('Audio play failed:', err));
-        }
-        
-        // Store the new time limit to use after transition
         this._nextTimeLimit = newTimeLimit;
         
-        // After transition completes, reset timer and continue
         setTimeout(() => {
             this.isInTransition = false;
             this.timerElement.classList.remove('time-change-pulse');
             this.timerText.innerHTML = newTimeLimit + 's';
-            // Start new timer with stored time limit
             this.startTimer(this._nextTimeLimit);
             this._nextTimeLimit = null;
         }, 1500);
@@ -426,353 +371,353 @@ class QuickplayGame {
                 setTimeout(() => {
                     overlay.remove();
                     resolve();
-                }, 500);}, 5000);
-            });
+                }, 500);
+            }, 5000);
+        });
+    }
+
+    async startGame() {
+        console.log('Starting game...');
+        if (this.startButton) {
+            this.startButton.disabled = true;
         }
-    
-        async startGame() {
-            console.log('Starting game...');
-            if (this.startButton) {
-                this.startButton.disabled = true;
-            }
-        
-            try {
-                await this.showBrainWarmup();
-                
-                this.enterFullscreenMode();
-                
-                const response = await fetch(this.urls.startGame, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken'),
-                    }
-                });
-                const data = await response.json();
-                
-                this.gameId = data.game_id;
-                this.isGameActive = true;
-                this.score = 0;
-                this.lives = 3;
-                this.questionNumber = 0;
-                
-                // Reset timer state
-                if (this.timer) {
-                    clearInterval(this.timer);
-                    this.timer = null;
-                }
-                this.initializeTimerStructure(); // Re-initialize timer structure
-        
-                // Show game header when game starts
-                if (this.gameHeader) {
-                    this.gameHeader.classList.add('active');
-                }
-                
-                if (this.startButton) {
-                    this.startButton.classList.add('hidden');
-                }
-                if (this.quitButton) {
-                    this.quitButton.classList.remove('hidden');
-                }
-                
-                this.updateDisplay();
-                this.loadQuestion();
-            } catch (error) {
-                console.error('Failed to start game:', error);
-                this.exitFullscreenMode();
-                if (this.startButton) {
-                    this.startButton.disabled = false;
-                }
-                this.showError('Failed to start game. Please try again.');
-            }
-        }
+
+        try {
+            await this.showBrainWarmup();
             
-        updateLivesDisplay() {
-            this.livesElement.innerHTML = '';
-            for (let i = 0; i < this.lives; i++) {
-                const heartImg = document.createElement('img');
-                heartImg.src = '/static/images/heart.png';
-                heartImg.alt = 'Heart';
-                heartImg.style.width = '3rem';
-                heartImg.style.height = '3rem';
-                heartImg.style.marginRight = i < this.lives - 1 ? '0.5rem' : '0';
-                heartImg.classList.add('heart-icon');
-                this.livesElement.appendChild(heartImg);
-            }
-            this.heartStateManager.updateHeartStates(this.lives);
-        }
-    
-        updateDisplay() {
-            this.scoreElement.textContent = this.score;
-            this.updateLivesDisplay();
-        }
-    
-        startTimer(specificTimeLimit = null) {
+            this.enterFullscreenMode();
+            
+            const response = await fetch(this.urls.startGame, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken'),
+                }
+            });
+            const data = await response.json();
+            
+            this.gameId = data.game_id;
+            this.isGameActive = true;
+            this.score = 0;
+            this.lives = 3;
+            this.questionNumber = 0;
+            
             if (this.timer) {
                 clearInterval(this.timer);
+                this.timer = null;
             }
-        
-            let timeLeft = specificTimeLimit || this.getQuestionTimeLimit();
-            const totalTime = timeLeft;
+            this.initializeTimerStructure();
+
+            if (this.gameHeader) {
+                this.gameHeader.classList.add('active');
+            }
             
-            const updateTimer = () => {
-                if (!this.isGameActive || this.isInTransition) {
-                    clearInterval(this.timer);
-                    return;
-                }
-        
-                const seconds = timeLeft;
-                
-                // Don't update display if in transition
-                if (!this.timerElement.classList.contains('time-change-pulse')) {
-                    this.timerText.textContent = `0:${seconds.toString().padStart(2, '0')}`;
-                }
-                
-                const progress = (timeLeft / totalTime) * 100;
-                const offset = this.circumference - (progress / 100) * this.circumference;
-                this.progressCircle.style.strokeDashoffset = offset;
-                
-                if (progress > 60) {
-                    this.progressCircle.style.stroke = '#22c55e';
-                } else if (progress > 30) {
-                    this.progressCircle.style.stroke = '#eab308';
-                } else {
-                    this.progressCircle.style.stroke = '#dc2626';
-                }
-        
-                if (timeLeft <= 5) {
-                    this.timerText.classList.add('final-countdown');
-                    if (navigator.vibrate) {
-                        navigator.vibrate(100);
-                    }
-                }
-                
-                if (timeLeft <= 0) {
-                    clearInterval(this.timer);
-                    this.timerText.classList.remove('final-countdown');
-                    this.lives--;
-                    this.updateDisplay();
-                    
-                    if (this.lives <= 0) {
-                        this.endGame('lives');
-                    } else {
-                        this.loadQuestion();
-                    }
-            };
-                
-            };
-    
-            // Only start the timer if we're not in transition
-            if (!this.isInTransition) {
-                this.timer = setInterval(() => {
-                    timeLeft--;
-                    updateTimer();
-                }, 1000);
-                
-                updateTimer();
+            if (this.startButton) {
+                this.startButton.classList.add('hidden');
             }
+            if (this.quitButton) {
+                this.quitButton.classList.remove('hidden');
+            }
+            
+            this.updateDisplay();
+            this.loadQuestion();
+        } catch (error) {
+            console.error('Failed to start game:', error);
+            this.exitFullscreenMode();
+            if (this.startButton) {
+                this.startButton.disabled = false;
+            }
+            this.showError('Failed to start game. Please try again.');
+        }
+    }
+        
+    updateLivesDisplay() {
+        this.livesElement.innerHTML = '';
+        for (let i = 0; i < this.lives; i++) {
+            const heartImg = document.createElement('img');
+            heartImg.src = '/static/images/heart.png';
+            heartImg.alt = 'Heart';
+            heartImg.style.width = '3rem';
+            heartImg.style.height = '3rem';
+            heartImg.style.marginRight = i < this.lives - 1 ? '0.5rem' : '0';
+            heartImg.classList.add('heart-icon');
+            this.livesElement.appendChild(heartImg);
+        }
+        this.heartStateManager.updateHeartStates(this.lives);
+    }
+
+    updateDisplay() {
+        this.scoreElement.textContent = this.score;
+        this.updateLivesDisplay();
+    }
+
+    startTimer(specificTimeLimit = null) {
+        if (this.timer) {
+            clearInterval(this.timer);
         }
     
-        async loadQuestion() {
-            try {
-                if (!this.isGameActive) return;
-                
+        let timeLeft = specificTimeLimit || this.getQuestionTimeLimit();
+        const totalTime = timeLeft;
+        
+        const updateTimer = () => {
+            if (!this.isGameActive || this.isInTransition) {
+                clearInterval(this.timer);
+                return;
+            }
+    
+            const seconds = timeLeft;
+            
+            if (!this.timerElement.classList.contains('time-change-pulse')) {
+                this.timerText.textContent = `0:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            const progress = (timeLeft / totalTime) * 100;
+            const offset = this.circumference - (progress / 100) * this.circumference;
+            this.progressCircle.style.strokeDashoffset = offset;
+            
+            if (progress > 60) {
+                this.progressCircle.style.stroke = '#22c55e';
+            } else if (progress > 30) {
+                this.progressCircle.style.stroke = '#eab308';
+            } else {
+                this.progressCircle.style.stroke = '#dc2626';
+            }
+    
+            if (timeLeft <= 5) {
+                this.timerText.classList.add('final-countdown');
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }
+            
+            if (timeLeft <= 0) {
+                clearInterval(this.timer);
                 this.timerText.classList.remove('final-countdown');
-                document.body.style.backgroundColor = '#009fdc';
-                
-                if (this.timer) {
-                    clearInterval(this.timer);
-                    this.timer = null;
-                }
-                
-                const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`);
-                const data = await response.json();
-                
-                if (data.status === 'game_over') {
-                    return this.endGame('complete');
-                }
-                
-                this.optionsContainer.innerHTML = '';
-                this.questionElement.style.opacity = '0';
-                
-                this.questionNumber++;
-                this.currentQuestion = data;
-                
-                setTimeout(() => {
-                    this.questionElement.textContent = data.question_text;
-                    this.questionElement.style.opacity = '1';
-                    
-                    const options = [data.option_1, data.option_2, data.option_3, data.option_4];
-                    
-                    options.forEach((option) => {
-                        const button = document.createElement('button');
-                        button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded hover:bg-gray-100 transition-all duration-300';
-                        button.textContent = option;
-                        button.addEventListener('click', () => this.submitAnswer(option, button));
-                        this.optionsContainer.appendChild(button);
-                    });
-                    
-                    this.optionsContainer.style.opacity = '1';
-                    this.startTimer();
-                }, 100);
-                
-            } catch (error) {
-                console.error('Failed to load question:', error);
-                this.showError('Failed to load question. Please try again.');
-                this.isGameActive = false;
-            }
-        }
-    
-        async submitAnswer(answer, button) {
-            if (!this.isGameActive) return;
-    
-            try {
-                const buttons = this.optionsContainer.querySelectorAll('button');
-                buttons.forEach(btn => btn.disabled = true);
-    
-                const formData = new FormData();
-                formData.append('game_id', this.gameId);
-                formData.append('answer', answer);
-                formData.append('question_id', this.currentQuestion.id);
-    
-                const response = await fetch(this.urls.submitAnswer, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken'),
-                    },
-                    body: formData
-                });
-                
-                const data = await response.json();
-    
-                const getPointText = (p) => p === 1 ? 'point' : 'points';
-            
-                const overlay = document.createElement('div');
-                overlay.className = `feedback-overlay ${data.correct ? 'correct' : 'incorrect'}`;
-                const points = data.correct ? 1 : 0;
-                overlay.innerHTML = `
-                    <div class="feedback-icon">${data.correct ? '✨' : '❌'}</div>
-                    <div class="feedback-text">${data.correct ? 'Correct!' : 'Incorrect'}</div>
-                    <div class="feedback-score">+${points} ${getPointText(points)}</div>
-                `;
-                
-                this.questionElement.parentElement.appendChild(overlay);
-                requestAnimationFrame(() => overlay.style.opacity = '1');
-                
-                if (data.correct) {
-                    if (this.soundEnabled && this.correctSound) {
-                        this.correctSound.currentTime = 0;
-                        this.correctSound.play().catch(err => console.warn('Audio play failed:', err));
-                    }
-                    this.score = data.score;
-                } else {
-                    const oldLives = this.lives;
-                    this.lives = data.lives;
-                    
-                    const hearts = this.livesElement.querySelectorAll('.heart-icon');
-                    const lastHeart = hearts[hearts.length - 1];
-                    if (lastHeart) {
-                        lastHeart.classList.add('heart-break');
-                        await new Promise(resolve => setTimeout(resolve, 600));
-                    }
-                    
-                    this.updateDisplay();
-                    this.heartStateManager.triggerLifeLossEffects();
-                }
-                
+                this.lives--;
                 this.updateDisplay();
-                
-                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 if (this.lives <= 0) {
                     this.endGame('lives');
                 } else {
-                    overlay.remove();
                     this.loadQuestion();
                 }
-            } catch (error) {
-                console.error('Failed to submit answer:', error);
-                this.showError('Failed to submit answer. Please try again.');
             }
+        };
+            
+        if (!this.isInTransition) {
+            this.timer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+            }, 1000);
+            
+            updateTimer();
         }
-    
-        async endGame(reason = 'unknown') {
+    }
+
+    async loadQuestion() {
+        try {
             if (!this.isGameActive) return;
             
-            this.isGameActive = false;
+            this.timerText.classList.remove('final-countdown');
+            document.body.style.backgroundColor = '#009fdc';
             
             if (this.timer) {
                 clearInterval(this.timer);
                 this.timer = null;
             }
             
-            const buttons = this.optionsContainer.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.disabled = true;
-                const newButton = button.cloneNode(true);
-                button.parentNode.replaceChild(newButton, button);
-            });
+            const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`);
+            const data = await response.json();
             
-            this.exitFullscreenMode();
-            
-            if (this.gameHeader) {
-                this.gameHeader.classList.remove('active');
+            if (data.status === 'game_over') {
+                return this.endGame('complete');
             }
             
-            await new Promise(resolve => setTimeout(resolve, 500));
+            this.optionsContainer.innerHTML = '';
+            this.questionElement.style.opacity = '0';
             
-            try {
-                const response = await fetch(this.urls.endGame + (this.gameId !== 'anonymous' ? this.gameId + '/' : ''), {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        reason: reason,
-                        score: this.score,
-                        lives: this.lives
-                    })
+            this.questionNumber++;
+            this.currentQuestion = data;
+            
+            setTimeout(() => {
+                this.questionElement.textContent = data.question_text;
+                this.questionElement.style.opacity = '1';
+                
+                const options = [data.option_1, data.option_2, data.option_3, data.option_4];
+                
+                options.forEach((option) => {
+                    const button = document.createElement('button');
+                    button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded hover:bg-gray-100 transition-all duration-300';
+                    button.textContent = option;
+                    button.addEventListener('click', () => this.submitAnswer(option, button));
+                    this.optionsContainer.appendChild(button);
                 });
                 
-                const data = await response.json();
-                
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else if (this.gameId === 'anonymous') {
-                    window.location.href = this.urls.anonymousResults;
-                } else {
-                    window.location.href = `${this.urls.results}${this.gameId}/`;
-                }
-            } catch (error) {
-                console.error('Error during end game:', error);
-                window.location.href = this.gameId === 'anonymous' ? 
-                    this.urls.anonymousResults : 
-                    this.urls.results;
-            }
-        }
-    
-        showError(message) {
-            console.error(message);
-            alert(message);
-        }
-    
-        getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+                this.optionsContainer.style.opacity = '1';
+                this.startTimer();
+            }, 100);
+            
+        } catch (error) {
+            console.error('Failed to load question:', error);
+            this.showError('Failed to load question. Please try again.');
+            this.isGameActive = false;
         }
     }
-    
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM Content Loaded - Initializing QuickplayGame');
-        window.quickplayGame = new QuickplayGame();
-    });
+
+    async submitAnswer(answer, button) {
+        if (!this.isGameActive) return;
+
+        try {
+            const buttons = this.optionsContainer.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const formData = new FormData();
+            formData.append('game_id', this.gameId);
+            formData.append('answer', answer);
+            formData.append('question_id', this.currentQuestion.id);
+
+            const response = await fetch(this.urls.submitAnswer, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken'),
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+
+            const getPointText = (p) => p === 1 ? 'point' : 'points';
+        
+            const overlay = document.createElement('div');
+            overlay.className = `feedback-overlay ${data.correct ? 'correct' : 'incorrect'}`;
+            const points = data.correct ? 1 : 0;
+            overlay.innerHTML = `
+                <div class="feedback-icon">${data.correct ? '✨' : '❌'}</div>
+                <div class="feedback-text">${data.correct ? 'Correct!' : 'Incorrect'}</div>
+                <div class="feedback-score">+${points} ${getPointText(points)}</div>
+            `;
+            
+            this.questionElement.parentElement.appendChild(overlay);
+            requestAnimationFrame(() => overlay.style.opacity = '1');
+            
+            if (data.correct) {
+                if (this.soundEnabled && this.correctSound) {
+                    this.correctSound.currentTime = 0;
+                    this.correctSound.play().catch(err => console.warn('Audio play failed:', err));
+                }
+                this.score = data.score;
+            } else {
+                if (this.soundEnabled && this.wrongSound) {
+                    this.wrongSound.currentTime = 0;
+                    this.wrongSound.play().catch(err => console.warn('Audio play failed:', err));
+                }
+                const oldLives = this.lives;
+                this.lives = data.lives;
+                
+                const hearts = this.livesElement.querySelectorAll('.heart-icon');
+                const lastHeart = hearts[hearts.length - 1];
+                if (lastHeart) {
+                    lastHeart.classList.add('heart-break');
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                }
+                
+                this.updateDisplay();
+                this.heartStateManager.triggerLifeLossEffects();
+            }
+            
+            this.updateDisplay();
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            if (this.lives <= 0) {
+                this.endGame('lives');
+            } else {
+                overlay.remove();
+                this.loadQuestion();
+            }
+        } catch (error) {
+            console.error('Failed to submit answer:', error);
+            this.showError('Failed to submit answer. Please try again.');
+        }
+    }
+
+    async endGame(reason = 'unknown') {
+        if (!this.isGameActive) return;
+        
+        this.isGameActive = false;
+        
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        
+        const buttons = this.optionsContainer.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.disabled = true;
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+        });
+        
+        this.exitFullscreenMode();
+        
+        if (this.gameHeader) {
+            this.gameHeader.classList.remove('active');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        try {
+            const response = await fetch(this.urls.endGame + (this.gameId !== 'anonymous' ? this.gameId + '/' : ''), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: reason,
+                    score: this.score,
+                    lives: this.lives
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else if (this.gameId === 'anonymous') {
+                window.location.href = this.urls.anonymousResults;
+            } else {
+                window.location.href = `${this.urls.results}${this.gameId}/`;
+            }
+        } catch (error) {
+            console.error('Error during end game:', error);
+            window.location.href = this.gameId === 'anonymous' ? 
+                this.urls.anonymousResults : 
+                this.urls.results;
+        }
+    }
+
+    showError(message) {
+        console.error(message);
+        alert(message);
+    }
+
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded - Initializing QuickplayGame');
+    window.quickplayGame = new QuickplayGame();
+});
