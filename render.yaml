@@ -1,4 +1,4 @@
-services:
+echo 'services:
   - type: web
     name: mindduel
     env: python
@@ -11,3 +11,4 @@ services:
         value: IQ_Game.settings
       - key: PYTHON_VERSION
         value: 3.10.0
+' > render.yaml
