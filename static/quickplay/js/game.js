@@ -381,19 +381,38 @@ class QuickplayGame {
         if (this.startButton) {
             this.startButton.disabled = true;
         }
-
+    
         try {
             await this.showBrainWarmup();
             
             this.enterFullscreenMode();
             
+            // Add error handling for CSRF token
+            const csrfToken = this.getCookie('csrftoken');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+            
+            // Add additional headers and error handling
             const response = await fetch(this.urls.startGame, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                }
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin' // Important for CSRF
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            
+            if (!data || !data.game_id) {
+                throw new Error('Invalid response from server');
+            }
             
             this.gameId = data.game_id;
             this.isGameActive = true;
@@ -405,8 +424,9 @@ class QuickplayGame {
                 clearInterval(this.timer);
                 this.timer = null;
             }
+            
             this.initializeTimerStructure();
-
+    
             if (this.gameHeader) {
                 this.gameHeader.classList.add('active');
             }
@@ -419,16 +439,18 @@ class QuickplayGame {
             }
             
             this.updateDisplay();
-            this.loadQuestion();
+            await this.loadQuestion();
+            
         } catch (error) {
             console.error('Failed to start game:', error);
             this.exitFullscreenMode();
             if (this.startButton) {
                 this.startButton.disabled = false;
             }
-            this.showError('Failed to start game. Please try again.');
+            this.showError(`Failed to start game: ${error.message}`);
         }
     }
+    
         
     updateLivesDisplay() {
         this.livesElement.innerHTML = '';
@@ -697,8 +719,23 @@ class QuickplayGame {
     }
 
     showError(message) {
-        console.error(message);
-        alert(message);
+        console.error('Game Error:', message);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff4444;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            z-index: 9999;
+        `;
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 5000);
     }
 
     getCookie(name) {

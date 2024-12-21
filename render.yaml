@@ -1,4 +1,4 @@
-services:  
+services:
   - type: web
     name: mindduel
     env: python
@@ -11,3 +11,7 @@ services:
         value: IQ_Game.settings
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"

@@ -486,14 +486,14 @@
 <!-- Game Configuration -->
 <script>
     window.QUICKPLAY_URLS = {
-        startGame: '{% url "quickplay:start_game" %}',
-        getQuestion: '{% url "quickplay:get_question" %}',
-        submitAnswer: '{% url "quickplay:submit_answer" %}',
-        endGame: '/quickplay/api/end-game/',
-        anonymousResults: '{% url "quickplay:anonymous_results" %}',
-        home: '{% url "quickplay:home" %}',
-        results: '/quickplay/results/'
-    };
+    startGame: '/quickplay/api/start-game/',  // Make sure this matches your Django URL pattern
+    getQuestion: '/quickplay/api/get-question/',
+    submitAnswer: '/quickplay/api/submit-answer/',
+    endGame: '/quickplay/api/end-game/',
+    anonymousResults: '/quickplay/anonymous-results/',
+    home: '/quickplay/',
+    results: '/quickplay/results/'
+};
 </script>
 <!-- Game Logic -->
 <script defer src="{% static 'quickplay/js/game.js' %}"></script>
