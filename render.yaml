@@ -1,4 +1,4 @@
-echo 'services:
+services:
   - type: web
     name: mindduel
     env: python
@@ -10,4 +10,5 @@ echo 'services:
       - key: DJANGO_SETTINGS_MODULE
         value: IQ_Game.settings
       - key: PYTHON_VERSION
-        value: 3.10.0' > render.yaml
+        value: 3.10.0
+        
