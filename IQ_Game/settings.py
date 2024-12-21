@@ -98,7 +98,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'theme/static'),
-    os.path.join(BASE_DIR, 'quickplay/static'),
+    # Removed quickplay/static as it doesn't exist
 ]
 
 STATICFILES_FINDERS = [
@@ -122,7 +122,8 @@ TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-TAILWIND_CSS_PATH = "css/dist/styles.css"
+# Updated Tailwind CSS path to match the actual output file
+TAILWIND_CSS_PATH = "css/dist/output.css"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
