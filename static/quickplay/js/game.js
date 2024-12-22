@@ -215,85 +215,6 @@ class QuickplayGame {
         }
     }
 
-    getQuestionTimeLimit() {
-        const questionGroup = Math.floor(this.questionNumber / 3);
-        const previousGroup = Math.floor((this.questionNumber - 1) / 3);
-        
-        const oldTimeLimit = (() => {
-            switch (previousGroup) {
-                case 0: return 60;
-                case 1: return 50;
-                case 2: return 40;
-                case 3: return 30;
-                case 4: return 20;
-                case 5: return 15;
-                case 6: return 10;
-                default: return 5;
-            }
-        })();
-        
-        const newTimeLimit = (() => {
-            switch (questionGroup) {
-                case 0: return 60;
-                case 1: return 50;
-                case 2: return 40;
-                case 3: return 30;
-                case 4: return 20;
-                case 5: return 15;
-                case 6: return 10;
-                default: return 5;
-            }
-        })();
-        
-        if (questionGroup !== previousGroup && this.questionNumber > 1 && !this.isInTransition) {
-            this.triggerDifficultyTransition(oldTimeLimit, newTimeLimit);
-        }
-        
-        return newTimeLimit;
-    }
-
-    triggerDifficultyTransition(oldTimeLimit, newTimeLimit) {
-        this.isInTransition = true;
-        
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
-        
-        this.timerElement.classList.add('time-change-pulse');
-        
-        this.timerText.innerHTML = `
-            <div class="old-time">${oldTimeLimit}s</div>
-            <div class="new-time">${newTimeLimit}s</div>
-        `;
-        
-        this._nextTimeLimit = newTimeLimit;
-        
-        setTimeout(() => {
-            this.isInTransition = false;
-            this.timerElement.classList.remove('time-change-pulse');
-            this.timerText.innerHTML = newTimeLimit + 's';
-            this.startTimer(this._nextTimeLimit);
-            this._nextTimeLimit = null;
-        }, 1500);
-    }
-
-    toggleSound() {
-        this.soundEnabled = !this.soundEnabled;
-        localStorage.setItem('soundEnabled', this.soundEnabled);
-        this.updateSoundIcon();
-    }
-
-    updateSoundIcon() {
-        const muteButton = document.getElementById('muteButton');
-        const floatingMuteButton = document.getElementById('floatingMuteButton');
-        
-        const icon = this.soundEnabled ? '🔊' : '🔈';
-        
-        if (muteButton) muteButton.textContent = icon;
-        if (floatingMuteButton) floatingMuteButton.textContent = icon;
-    }
-
     async showBrainWarmup() {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
@@ -377,38 +298,57 @@ class QuickplayGame {
     }
 
     async startGame() {
-        console.log('Starting game...');
+        console.log('Start game button clicked');
         if (this.startButton) {
+            console.log('Start button found and disabled');
             this.startButton.disabled = true;
         }
     
         try {
+            console.log('Starting brain warmup...');
             await this.showBrainWarmup();
             
+            console.log('Entering fullscreen mode...');
             this.enterFullscreenMode();
             
-            // Add error handling for CSRF token
-            const csrfToken = this.getCookie('csrftoken');
+            // Get CSRF token from multiple sources
+            const csrfToken = window.CSRF_TOKEN || 
+                             document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             this.getCookie('csrftoken');
+                             
+            console.log('CSRF Token found:', !!csrfToken);
+            
             if (!csrfToken) {
                 throw new Error('CSRF token not found');
             }
+    
+            const headers = {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
             
-            // Add additional headers and error handling
+            console.log('Sending start game request...');
+            console.log('Request URL:', this.urls.startGame);
+            console.log('Request headers:', headers);
+    
             const response = await fetch(this.urls.startGame, {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin' // Important for CSRF
+                headers: headers,
+                credentials: 'include',
+                mode: 'same-origin'
             });
+    
+            console.log('Response status:', response.status);
             
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (!data || !data.game_id) {
                 throw new Error('Invalid response from server');
@@ -450,8 +390,23 @@ class QuickplayGame {
             this.showError(`Failed to start game: ${error.message}`);
         }
     }
-    
+
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('soundEnabled', this.soundEnabled);
+        this.updateSoundIcon();
+    }
+
+    updateSoundIcon() {
+        const muteButton = document.getElementById('muteButton');
+        const floatingMuteButton = document.getElementById('floatingMuteButton');
         
+        const icon = this.soundEnabled ? '🔊' : '🔈';
+        
+        if (muteButton) muteButton.textContent = icon;
+        if (floatingMuteButton) floatingMuteButton.textContent = icon;
+    }
+
     updateLivesDisplay() {
         this.livesElement.innerHTML = '';
         for (let i = 0; i < this.lives; i++) {
@@ -470,6 +425,69 @@ class QuickplayGame {
     updateDisplay() {
         this.scoreElement.textContent = this.score;
         this.updateLivesDisplay();
+    }
+
+    getQuestionTimeLimit() {
+        const questionGroup = Math.floor(this.questionNumber / 3);
+        const previousGroup = Math.floor((this.questionNumber - 1) / 3);
+        
+        const oldTimeLimit = (() => {
+            switch (previousGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        const newTimeLimit = (() => {
+            switch (questionGroup) {
+                case 0: return 60;
+                case 1: return 50;
+                case 2: return 40;
+                case 3: return 30;
+                case 4: return 20;
+                case 5: return 15;
+                case 6: return 10;
+                default: return 5;
+            }
+        })();
+        
+        if (questionGroup !== previousGroup && this.questionNumber > 1 && !this.isInTransition) {
+            this.triggerDifficultyTransition(oldTimeLimit, newTimeLimit);
+        }
+        
+        return newTimeLimit;
+    }
+
+    triggerDifficultyTransition(oldTimeLimit, newTimeLimit) {
+        this.isInTransition = true;
+        
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        
+        this.timerElement.classList.add('time-change-pulse');
+        
+        this.timerText.innerHTML = `
+            <div class="old-time">${oldTimeLimit}s</div>
+            <div class="new-time">${newTimeLimit}s</div>
+        `;
+        
+        this._nextTimeLimit = newTimeLimit;
+        
+        setTimeout(() => {
+            this.isInTransition = false;
+            this.timerElement.classList.remove('time-change-pulse');
+            this.timerText.innerHTML = newTimeLimit + 's';
+            this.startTimer(this._nextTimeLimit);
+            this._nextTimeLimit = null;
+        }, 1500);
     }
 
     startTimer(specificTimeLimit = null) {
@@ -547,7 +565,15 @@ class QuickplayGame {
                 this.timer = null;
             }
             
-            const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`);
+            const response = await fetch(`${this.urls.getQuestion}?game_id=${this.gameId}`, {
+                credentials: 'same-origin',
+                mode: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             
             if (data.status === 'game_over') {
@@ -592,6 +618,11 @@ class QuickplayGame {
             const buttons = this.optionsContainer.querySelectorAll('button');
             buttons.forEach(btn => btn.disabled = true);
 
+            const csrfToken = window.CSRF_TOKEN || this.getCookie('csrftoken');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+
             const formData = new FormData();
             formData.append('game_id', this.gameId);
             formData.append('answer', answer);
@@ -600,10 +631,16 @@ class QuickplayGame {
             const response = await fetch(this.urls.submitAnswer, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
+                    'X-CSRFToken': csrfToken
                 },
+                credentials: 'same-origin',
+                mode: 'same-origin',
                 body: formData
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
 
@@ -688,12 +725,19 @@ class QuickplayGame {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         try {
+            const csrfToken = window.CSRF_TOKEN || this.getCookie('csrftoken');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+
             const response = await fetch(this.urls.endGame + (this.gameId !== 'anonymous' ? this.gameId + '/' : ''), {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
+                    'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/json'
                 },
+                credentials: 'same-origin',
+                mode: 'same-origin',
                 body: JSON.stringify({
                     reason: reason,
                     score: this.score,
@@ -701,6 +745,10 @@ class QuickplayGame {
                 })
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             
             if (data.redirect) {
@@ -739,18 +787,18 @@ class QuickplayGame {
     }
 
     getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+        if (!document.cookie) {
+            return null;
         }
-        return cookieValue;
+
+        const xsrfCookies = document.cookie.split(';')
+            .map(c => c.trim())
+            .filter(c => c.startsWith(name + '='));
+
+        if (xsrfCookies.length === 0) {
+            return null;
+        }
+        return decodeURIComponent(xsrfCookies[0].split('=')[1]);
     }
 }
 
