@@ -11,6 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def quickplay_home(request):
     """Home page view showing game instructions and leaderboard."""
     try:
@@ -73,24 +74,35 @@ def quickplay_results(request, game_id=None):
     logger.info(f"Accessing results page with game_id: {game_id}")
     context = {}
 
-    # Get the game state before clearing it
+    # Add top scores to context first
+    try:
+        context['top_scores'] = Leaderboard.objects.order_by('-score')[:10]
+    except DatabaseError:
+        logger.error("Failed to fetch top scores")
+        context['top_scores'] = []
+
+    # Check for game state first (for anonymous users)
     game_state = request.session.get('quickplay_game', {})
     logger.info(f"Session game state: {game_state}")
 
-    # Add top scores to context first
-    context['top_scores'] = Leaderboard.objects.order_by('-score')[:10]
-
-    # Check for game state first (for anonymous users)
     if game_state and 'score' in game_state:
-        score = game_state.get('score', 0)
+        answers = game_state.get('answers', [])
+        total_answers = len(answers)
+        correct_answers = sum(1 for answer in answers if answer['is_correct'])
+        accuracy = (correct_answers / total_answers * 100) if total_answers > 0 else 0
+        
         context.update({
-            'score': score,
+            'score': game_state.get('score', 0),
+            'answers': answers,
+            'accuracy': accuracy,
+            'total_answers': total_answers,
+            'correct_answers': correct_answers,
             'message': 'Log in to save your score and track your progress!',
             'is_anonymous': True
         })
         # Clear the game state after using it
         del request.session['quickplay_game']
-        request.session.modified = True  # Ensure session is saved
+        request.session.modified = True
         return render(request, 'quickplay/results.html', context)
 
     # Then check for authenticated user with game_id
@@ -128,7 +140,6 @@ def quickplay_results(request, game_id=None):
                 'message': 'No game results found. Try playing a new game!'
             })
     else:
-        # No game state and no authenticated game
         context.update({
             'no_game': True,
             'message': 'No game results found. Try playing a new game!'
@@ -243,12 +254,12 @@ def submit_answer(request):
         is_correct = answer.lower() == question.correct_answer.lower()
         
         if request.user.is_authenticated and game_id != 'anonymous':
+            # [Keep existing authenticated user code unchanged]
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
             
             if game.is_completed:
                 return JsonResponse({'status': 'game_over'})
             
-            # Record the answer
             QuickplayAnswer.objects.create(
                 game=game,
                 question=question,
@@ -257,7 +268,6 @@ def submit_answer(request):
                 answered_at=timezone.now()
             )
             
-            # Update game stats
             if is_correct:
                 game.score += 1
             else:
@@ -281,19 +291,30 @@ def submit_answer(request):
             if not game_state:
                 return JsonResponse({'error': 'No active game'}, status=400)
             
-            # Update game state
+            # Store detailed answer information
+            answer_data = {
+                'question_text': question.question_text,
+                'user_answer': answer,
+                'correct_answer': question.correct_answer,
+                'is_correct': is_correct,
+                'explanation': question.explanation,
+                'answered_at': timezone.now().isoformat()
+            }
+            
+            # Initialize or get the answers list
+            game_state.setdefault('answers', []).append(answer_data)
+            
             if is_correct:
                 game_state['score'] = game_state.get('score', 0) + 1
             else:
                 game_state['lives'] = max(0, game_state.get('lives', 3) - 1)
             
-            # Track answered questions
             answered_questions = game_state.get('answered_questions', [])
             answered_questions.append(question_id)
             game_state['answered_questions'] = answered_questions
             
             request.session['quickplay_game'] = game_state
-            request.session.modified = True  # Ensure session is saved
+            request.session.modified = True
             
             return JsonResponse({
                 'correct': is_correct,

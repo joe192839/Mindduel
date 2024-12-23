@@ -194,3 +194,13 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_NAME = 'mindduel_sessionid'
+
+ANONYMOUS_REQUIRED_PATHS = [
+    '/quickplay/',
+    '/quickplay/game/',
+    '/quickplay/anonymous-results/',
+    '/quickplay/api/start-game/',
+    '/quickplay/api/get-question/',
+    '/quickplay/api/submit-answer/',
+    '/quickplay/api/end-game/',
+]

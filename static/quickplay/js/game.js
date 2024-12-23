@@ -729,7 +729,7 @@ class QuickplayGame {
             if (!csrfToken) {
                 throw new Error('CSRF token not found');
             }
-
+    
             const response = await fetch(this.urls.endGame + (this.gameId !== 'anonymous' ? this.gameId + '/' : ''), {
                 method: 'POST',
                 headers: {
@@ -748,9 +748,10 @@ class QuickplayGame {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const data = await response.json();
             
+            // Handle redirection based on user type and response
             if (data.redirect) {
                 window.location.href = data.redirect;
             } else if (this.gameId === 'anonymous') {
@@ -760,9 +761,10 @@ class QuickplayGame {
             }
         } catch (error) {
             console.error('Error during end game:', error);
+            // Fallback redirection if there's an error
             window.location.href = this.gameId === 'anonymous' ? 
                 this.urls.anonymousResults : 
-                this.urls.results;
+                `${this.urls.results}${this.gameId}/`;
         }
     }
 

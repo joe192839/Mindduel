@@ -15,6 +15,6 @@ urlpatterns = [
     path('api/end-game/<str:game_id>/', views.end_game, name='end_game'),
     
     # Results views
-    path('results/<str:game_id>/', views.quickplay_results, name='results'),  # Changed from results to quickplay_results
-    path('anonymous-results/', views.quickplay_results, name='anonymous_results'),  # Changed to use quickplay_results
+ path('anonymous-results/', views.quickplay_results, name='anonymous_results'),
+    path('results/<str:game_id>/', views.quickplay_results, name='results'),
 ]
