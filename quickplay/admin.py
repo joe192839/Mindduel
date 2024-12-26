@@ -69,6 +69,21 @@ class QuickplayQuestionAdmin(admin.ModelAdmin):
         payload = {"form": form}
         return render(request, "admin/csv_form.html", payload)
 
+@admin.register(QuestionImage)
+class QuestionImageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'image_type', 'created_at']
+    list_filter = ['image_type']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.image:  # If no image uploaded, generate one
+            if obj.image_type == 'GEOMETRIC':
+                image = create_geometric_pattern(400, 400)
+                # Save the generated image
+                buffer = io.BytesIO()
+                image.save(buffer, format='PNG')
+                obj.image.save(f'geometric_{obj.id}.png', buffer, save=False)
+        super().save_model(request, obj, form, change)
+        
 # Register other models
 admin.site.register(QuickplayGame)
 admin.site.register(QuickplayAnswer)
