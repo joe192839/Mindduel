@@ -19,7 +19,7 @@
         --primary-700: #006080;
         
         /* Accent Colors */
-        --accent-navy: #1B2A4A;
+        --accent-coral: #CD4B45;
         --accent-teal: #00B8A9;
         
         /* Dark Theme Colors */
@@ -27,14 +27,14 @@
         --surface-darker: #121212;
         
         /* Gradients */
-        --gradient-primary: linear-gradient(135deg, var(--primary-500), var(--accent-navy));
+        --gradient-primary: linear-gradient(135deg, var(--primary-500), var(--accent-coral));
         --gradient-surface: linear-gradient(180deg, var(--surface-dark), var(--surface-darker));
     }
 
     body {
         font-family: 'League Spartan', sans-serif;
         overflow-x: hidden;
-        background: linear-gradient(135deg, var(--primary-500), var(--accent-navy));
+        background: linear-gradient(135deg, var(--primary-500), var(--accent-coral));
         min-height: 100vh;
     }
 
@@ -57,9 +57,9 @@
     }
 
     @keyframes pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(27, 42, 74, 0.4); }
-        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(27, 42, 74, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(27, 42, 74, 0); }
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(205, 75, 69, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(205, 75, 69, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(205, 75, 69, 0); }
     }
 
     .animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
