@@ -8,9 +8,9 @@ from django.db import DatabaseError
 from django.urls import reverse
 import random
 import logging
+import json  # Add this import
 
 logger = logging.getLogger(__name__)
-
 
 def quickplay_home(request):
     """Home page view showing game instructions and leaderboard."""
@@ -73,18 +73,18 @@ def quickplay_results(request, game_id=None):
     """Results page showing game summary."""
     logger.info(f"Accessing results page with game_id: {game_id}")
     context = {}
-
+    
     # Add top scores to context first
     try:
         context['top_scores'] = Leaderboard.objects.order_by('-score')[:10]
     except DatabaseError:
         logger.error("Failed to fetch top scores")
         context['top_scores'] = []
-
+    
     # Check for game state first (for anonymous users)
     game_state = request.session.get('quickplay_game', {})
     logger.info(f"Session game state: {game_state}")
-
+    
     if game_state and 'score' in game_state:
         answers = game_state.get('answers', [])
         total_answers = len(answers)
@@ -95,6 +95,7 @@ def quickplay_results(request, game_id=None):
             'score': game_state.get('score', 0),
             'answers': answers,
             'accuracy': accuracy,
+            'highest_speed_level': game_state.get('highest_speed_level', 60),
             'total_answers': total_answers,
             'correct_answers': correct_answers,
             'message': 'Log in to save your score and track your progress!',
@@ -104,7 +105,7 @@ def quickplay_results(request, game_id=None):
         del request.session['quickplay_game']
         request.session.modified = True
         return render(request, 'quickplay/results.html', context)
-
+    
     # Then check for authenticated user with game_id
     if request.user.is_authenticated and game_id:
         try:
@@ -124,11 +125,13 @@ def quickplay_results(request, game_id=None):
             except DatabaseError:
                 logger.error("Failed to calculate personal best")
                 personal_best = False
-
+            
             context.update({
                 'game': game,
+                'score': game.score,
                 'answers': answers,
                 'accuracy': accuracy,
+                'highest_speed_level': game.highest_speed_level,
                 'total_answers': total_answers,
                 'correct_answers': correct_answers,
                 'personal_best': personal_best
@@ -146,7 +149,6 @@ def quickplay_results(request, game_id=None):
         })
     
     return render(request, 'quickplay/results.html', context)
-
 def start_game(request):
     """API endpoint to start a new game."""
     if request.method != 'POST':
@@ -226,13 +228,14 @@ def get_question(request):
         
         question = random.choice(list(questions))
         return JsonResponse({
-            'id': question.id,
-            'question_text': question.question_text,
-            'option_1': question.option_1,
-            'option_2': question.option_2,
-            'option_3': question.option_3,
-            'option_4': question.option_4
-        })
+    'id': question.id,
+    'question_text': question.question_text,
+    'option_1': question.option_1,
+    'option_2': question.option_2,
+    'option_3': question.option_3,
+    'option_4': question.option_4,
+    'category': question.category  
+})
     except Exception as e:
         logger.error(f"Error getting question: {e}")
         return JsonResponse({'error': str(e)}, status=500)
@@ -337,8 +340,13 @@ def end_game(request, game_id=None):
         if game_id == 'anonymous' or not request.user.is_authenticated:
             game_state = request.session.get('quickplay_game', {})
             if game_state:
+                # Add highest_speed_level to game state
+                if request.method == 'POST':
+                    data = json.loads(request.body)
+                    game_state['highest_speed_level'] = data.get('highest_speed_level', 60)
+                    request.session['quickplay_game'] = game_state
+                    request.session.modified = True
                 logger.info("Redirecting anonymous user to results")
-                # Don't delete the game state here - let the results view handle it
                 return JsonResponse({
                     'status': 'success',
                     'redirect': reverse('quickplay:anonymous_results')
@@ -350,6 +358,11 @@ def end_game(request, game_id=None):
             if not game.is_completed:
                 game.is_completed = True
                 game.end_time = timezone.now()
+                
+                # Save highest_speed_level if provided
+                if request.method == 'POST':
+                    data = json.loads(request.body)
+                    game.highest_speed_level = data.get('highest_speed_level', 60)
                 game.save()
                 
                 time_taken = (game.end_time - game.start_time).seconds

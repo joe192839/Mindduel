@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mindduel
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn IQ_Game.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: IQ_Game.settings
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
+
+
+

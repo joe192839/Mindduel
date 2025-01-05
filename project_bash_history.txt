@@ -1,0 +1,537 @@
+npm install -g webpack webpack-cli
+sudo npm install -g webpack webpack-cli
+cd ~/Documents
+touch webpack.config.js
+nano webpack.config.js
+cd ~/Documents
+touch webpack.config.js
+nano webpack.config.js
+cd ~/Documents
+touch webpack.config.js
+nano webpack.config.js
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+cd ~/Documents
+webpack --config webpack.config.js
+nano webpack.config.js
+webpack --config webpack.config.js
+webpack --config webpack.config.js
+cd ~/Documents
+ls
+webpack --config webpack.config.js
+mkdir ~/Documents/src
+mv ~/Documents/date-fns.min.js ~/Documents/src/
+nano webpack.config.js
+python manage.py runserver
+python manage.py collectstatic
+python manage.py runserver
+python manage.py runserver
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+/opt/anaconda3/bin/jupyter_mac.command ; exit;
+python manage.py runserver
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py check_templates
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py runserver
+python manage.py makemigrations
+python manage.py migrate
+pip install django-browser-reload
+python manage.py startapp theme
+python manage.py startapp theme
+cd path/to/copied/project
+cd path/to/copied/project
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py runserver
+python manage.py tailwind start
+pip install django-tailwind
+npm install -D tailwindcss@latest autoprefixer@latest postcss@latest
+python manage.py tailwind init
+python manage.py tailwind install
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+y tailwind install
+python manage.py tailwind start
+python manage.py runserver
+lsof -i :8000
+kill 55278
+python manage.py runserver
+"/Users/joeclark/IQ Game/venv/bin/python"
+pip install django-browser-reload
+pip install django-browser-reload
+python manage.py startapp theme
+python manage.py tailwind install
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+fff
+python manage.py runserver
+python -m venv venv
+source venv/bin/activate
+pip freeze > requirements.txt
+python manage.py migrate
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+rm -rf theme/node_modules
+cd theme
+npm install
+python manage.py tailwind install --verbose
+python manage.py tailwind start --verbose
+cd 
+python manage.py tailwind install --verbose
+python manage.py tailwind start --verbose
+cd
+python manage.py tailwind install --verbose
+python manage.py tailwind start --verbose
+pwd
+cd Documents/IQ\ Game
+ls
+python manage.py tailwind install --verbose
+python manage.py tailwind start --verbose
+mkdir -p theme/static/css/dist
+cd theme
+npm run build
+cd
+python manage.py collectstatic
+python manage.py runserver
+cd Documents/IQ\ Game
+ls
+python manage.py collectstatic
+python manage.py runserver
+pwd
+ls
+python -m django --version
+python manage.py runserver --verbosity 3
+python manage.py check
+python -u manage.py runserver
+python manage.py runserver 8080
+pip list | grep Django
+python manage.py runserver 127.0.0.1:8000 --noreload
+mkdir static
+python manage.py check 
+python manage.py migrate
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py check
+python manage.py check
+python manage.py runserver --traceback
+python manage.py runserver
+pip install django
+/usr/bin/python3 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+pip install django-browser-reload
+pip list
+python manage.py tailwind install
+python manage.py tailwind install 
+python manage.py tailwind start
+python manage.py tailwind init
+pip install django-tailwind
+npm install -D tailwindcss@latest autoprefixer@latest postcss@latest
+# Initialize npm (creates package.json)
+npm init -y
+npm install -D tailwindcss@latest autoprefixer@latest postcss@latest
+npm install -D tailwindcss@latest autoprefixer@latest postcss@latest
+python manage.py tailwind init
+python manage.py tailwind install
+python manage.py tailwind start
+npx tailwindcss init
+echo "module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  }
+}" > postcss.config.js
+pip install django-tailwind
+python manage.py tailwind start
+python manage.py tailwind init
+ls
+ls theme
+ls theme
+python manage.py runserver
+python --version
+python --version
+pip list
+print("Manage.py is running")
+exec zsh
+"/Users/joeclark/Documents/IQ Game/venv/bin/python"
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+source venv/bin/activate
+python manage.py check
+pwd
+python manage.py runserver
+python manage.py runserver --verbosity 3
+python manage.py runserver -v 3 --traceback
+python manage.py runserver 8080
+lsof -i :8000
+lsof -i :8000
+source venv/bin/activate
+python manage.py makemigrations
+python manage.py migrate
+echo "Hello, World"/Users/joeclark/IQ Game/venv/bin/python"
+python --version
+
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py runserver
+python manage.py makemigrations
+python manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
+tree
+ls -R
+python manage.py runserver
+(python manage.py tailwind start;  python manage.py runserver
+python manage.py check
+pip install django-tailwind==3.8.0
+pip install django-browser-reload
+python manage.py tailwind init
+python manage.py tailwind install
+rm -rf theme
+python manage.py tailwind init
+python manage.py tailwind init
+python manage.py tailwind install
+python manage.py tailwind start
+python manage.py runserver
+mkdir -p static/css/dist
+python manage.py tailwind start
+ls -R
+mkdir -p quiz/migrations
+touch quiz/migrations/__init__.py
+rm -f quiz/migrations/0*.py
+python manage.py makemigrations quiz
+python manage.py makemigrations quiz
+python manage.py migrate
+python manage.py tailwind start
+python manage.py makemigrations quiz
+python manage.py makemigrations quiz
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py makemigrations
+python manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
+python manage.py makemigrations
+python manage.py runserver
+(python manage.py tailwind start
+python manage.py runserver
+ python manage.py runserver
+python manage.py makemigrations
+python manage.py migrate
+python manage.py makemigrations quiz
+python manage.py runserver
+lsof -i :8000
+kill 
+82007
+kill 82007
+python manage.py runserver
+python manage.py makemigrations
+python manage.py runserver
+lsof -i :8000
+kill 
+82890
+kill 82890
+python manage.py runserver
+python manage.py makemigrations
+python manage.py runserver
+lsof -i :8000
+kill 85000
+python manage.py runserver
+python manage.py tailwind start
+python manage.py runserver
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+# Remove existing CSS files
+rm theme/static/css/dist/output.css
+# Install dependencies
+npm install
+# Start the build process
+npm run build:css
+python manage.py runserver
+lsof -i :8000
+kill 5015
+python manage.py runserver
+python manage.py runserver
+python manage.py runserver
+python manage.py tailwind start
+npm run build:css
+npm run build:css
+npm run build:css
+npm run build:css
+python manage.py runserver
+python manage.py tailwind start
+# Check the file size
+ls -l theme/static/css/dist/output.css
+# Look at the first few lines
+head -n 20 theme/static/css/dist/output.css
+# Check if all template directories exist
+ls quiz/templates/home.html
+ls theme/templates/base.html
+ls templates/quickplay/
+# Show directory structure
+ls -R theme/static/css/
+ls -R theme/src/
+mkdir -p theme/src
+touch theme/src/styles.css
+# Remove existing CSS files
+rm theme/static/css/dist/*
+# Install Tailwind in your theme app
+python manage.py tailwind install
+# Start the Tailwind build process
+python manage.py tailwind start
+# Terminal 1 - Keep your Tailwind process running
+python manage.py tailwind start
+find . -name "game.js"
+python manage.py makemigrations
+python manage.py migrate
+brew install git
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+cd joeclark > IQ - Game (New)
+cd ~/joeclark/IQ\ -\ Game\ \(New\)
+cd ~/joeclark/IQ\ -\ Game\ \(New\)
+pwd
+git init                           # Initialize git in your project
+git add .                          # Add all files to git
+git commit -m "Upload Django project"  # Commit your changes
+git branch -M main                 # Rename default branch to 'main'
+git remote add origin https://github.com/your-username/your-repository.git  # Add GitHub repository
+git push -u origin main            # Push the code to GitHub
+echo "# Mindduel" >> README.mdgit initgit add README.mdgit commit -m "first commit"git branch -M maingit remote add origin https://github.com/joe192839/Mindduel.gitgit push -u origin main
+git commit -m "Upload Django project"
+git branch -M main
+git remote add origin https://github.com/joe192839/Mindduel.git
+git push -u origin main
+# First remove the incorrect README file
+rm README.mdgit
+# Create a proper README
+echo "# Mindduel" >> README.md
+# Add all your files (including the new README and the modified .DS_Store)
+git add .
+# Now commit your changes
+git commit -m "Upload Django project"
+# Since the remote already exists, we need to update it to the correct URL
+git remote set-url origin https://github.com/joe192839/Mindduel.git
+# Finally push to main
+git push -u origin main
+python manage.py runserver
+python manage.py collectstatic --noinput
+ls staticfiles/quickplay/js/game.js
+mkdir -p static/quickplay/js
+mv your-game-js-location static/quickplay/js/game.js
+python manage.py collectstatic --clear --noinput
+python manage.py collectstatic --noinput
+find . -name "game.js"
+python manage.py tailwind start
+python manage.py shell
+python manage.py shell
+python manage.py shell
+pip freeze > requirements.txt
+touch build.sh
+#!/usr/bin/env bash
+# exit on error
+set -o errexit
+# Install python dependencies
+pip install -r requirements.txt
+# Install node dependencies and build Tailwind CSS
+cd theme/static_src
+npm install
+npm run build
+# Collect static files
+python manage.py collectstatic --no-input
+pip freeze > requirements.txt
+touch build.sh
+set -o errexit
+pip install -r requirements.txt
+cd theme/static_src
+npm install
+npm run build
+python manage.py collectstatic --no-input
+git status
+touch .gitignore
+git add .
+git commit -m "Initial Django project setup"
+git remote add origin https://github.com/joe192839/Mindduel.git
+git push -u origin main
+python manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
+manage.py migrate
+manage.py migrate
+python manage.py migrate
+mkdir -p quickplay/static
+pip freeze > requirements.txt
+touch build.sh
+chmod +x build.sh
+#!/usr/bin/env bash
+set -o errexit
+pip install -r requirements.txt
+cd theme/static_src
+npm install
+npm run build
+python manage.py collectstatic --no-input
+#!/usr/bin/env bash
+set -o errexit
+pip install -r requirements.txt
+python manage.py collectstatic --no-input
+python manage.py migrate
+#!/usr/bin/env bash
+set -o errexit
+pip install -r requirements.txt
+python manage.py collectstatic --no-input
+python manage.py migrate
+#!/usr/bin/env bash
+set -o errexit
+# Install Python dependencies
+echo "Installing Python dependencies..."
+pip install --upgrade pip
+pip install gunicorn
+pip install -r requirements.txt
+# Ensure directories exist
+echo "Creating necessary directories..."
+mkdir -p static/css/dist
+mkdir -p staticfiles
+mkdir -p theme/static_src/node_modules
+# Install and build Tailwind CSS
+echo "Setting up Tailwind CSS..."
+cd theme/static_src
+# Check if package.json exists
+if [ ! -f "package.json" ]; then     echo "Error: package.json not found in theme/static_src";     exit 1; fi
+# Install Node.js dependencies
+echo "Installing Node.js dependencies..."
+npm install
+# Build Tailwind CSS
+echo "Building Tailwind CSS..."
+npm run build
+# Return to project root
+cd ../..
+# Run Django commands
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear
+echo "Running database migrations..."
+python manage.py migrate --noinput
+python manage.py tailwind start
+python manage.py runserver
+git init
+git status
+touch .gitignore
+git add .
+git commit -m "Initial Django project setup"
+git remote add origin https://github.com/joe192839/Mindduel.git
+git push -u origin main
+git config --global user.name Joseph
+git config --global user.email clarkjoe199@gmail.com
+pip freeze > requirements.txt
+pip install gunicorn
+pip freeze > requirements.txt
+chmod +x build.sh
+touch render.yaml
+pip install whitenoise
+pip freeze > requirements.txt
+git add .
+git commit -m "Add Render configuration and update settings"
+git push origin main
+mkdir -p static/css/dist
+mkdir -p staticfiles
+#!/usr/bin/env bash
+set -o errexit
+pip install --upgrade pip
+pip install gunicorn
+pip install -r requirements.txt
+mkdir -p static/css/dist
+mkdir -p staticfiles
+cd theme/static_src
+npm install
+npm run build
+npm run build
+cd ../..
+python manage.py collectstatic --no-input
+python manage.py migrate
+pip freeze | grep gunicorn
+git add .
+git commit -m "Fix gunicorn installation in build script"
+git init
+git init
+git status
+git add .
+git commit -m "Initial Django project setup"
+git remote add origin https://github.com/joe192839/Mindduel.git
+git push -u origin main
+git add .
+git commit -m "Add deployment configuration and fix static files"
+git push origin main
+mkdir -p theme/static_src/src
+touch theme/static_src/src/styles.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+{   "scripts": {;     "build:tailwind": "tailwindcss --postcss -i ./src/styles.css -o ../../static/css/dist/output.css --minify",;     "build": "npm run build:tailwind",;     "build:clean": "rimraf ../../static/css/dist";   }
+cat render.yaml
+nano render.yaml
+ls -R
+git status
+git add static/quickplay/js/game.js
+git add templates/base.html
+git add templates/quickplay/game.html
+git add theme/templates/base.html
+git add static/quickplay/audio/
+git commit -m "Update sound implementation and audio files"
+git push origin main
+./build.sh
+git status
+git add .
+git commit -m "Update deployment configuration and fix URL patterns"
+git push
+git add render.yaml
+git commit -m "Update render.yaml with enhanced security and CSRF configuration"
+git push
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+python manage.py runserver
+git status
+# Add the modified files
+git add quickplay/views.py
+git add quickplay/urls.py
+git add templates/quickplay/results.html
+git add static/quickplay/js/game.js
+git add IQ_Game/urls.py
+git add IQ_Game/settings.py
+git commit -m "Enable anonymous user access to game results and explanations. Updates include:
+- Modified views.py for anonymous user result handling
+- Updated results.html template with anonymous user support
+- Updated Game.js endGame method
+- Adjusted URLs and settings for public access"
+git push origin main 
+/Library/Developer/CommandLineTools/usr/bin/python3.8 /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/printEnvVariablesToFile.py /Users/joeclark/.vscode/extensions/ms-python.python-2024.14.1-darwin-x64/python_files/deactivate/bash/envVars.txt
+cd your-django-project
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/joe192839/Extra.git
+git push -u origin main
+git push -u origin master
+git rm --cached Extra
+git commit -m "Remove nested repository"
+git push origin main
+git clone https://github.com/joe192839/Extra.git
+cd Extra
+git add 
+git add .
+git commit -m "Initial commit"
+git main origin main 
+git push origin main
+git add . 
+git commit -m "Initial commit"
+git push origin main
+python manage.py runserver

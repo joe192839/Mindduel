@@ -1,6 +1,5 @@
-# quiz/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings  # Add this import
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -88,7 +87,7 @@ class Choice(models.Model):
         ]
 
 class UserPreference(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
     preferred_question_types = models.ManyToManyField(QuestionType)
     preferred_time_limit = models.IntegerField(default=30)
     preferred_question_count = models.IntegerField(default=10)
@@ -97,7 +96,7 @@ class UserPreference(models.Model):
         return f"Preferences for {self.user.username}"
 
 class UserAnswer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
     is_correct = models.BooleanField()
@@ -113,7 +112,7 @@ class UserAnswer(models.Model):
         ordering = ['-created_at']
 
 class PracticeSession(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     

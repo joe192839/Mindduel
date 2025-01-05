@@ -271,6 +271,64 @@
         height: 4px;
         background: linear-gradient(90deg, #009fdc, rgba(0, 159, 220, 0.1));
     }
+    .question-category {
+    /* Basic styling */
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    
+    /* Positioning and spacing */
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem;
+    display: inline-block;
+    
+    /* Modern glass-like effect */
+    background: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 159, 220, 0.2);
+    border-radius: 6px;
+    
+    /* Consistent with your shadow theme */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+    /* Smooth transitions */
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+    animation-delay: 0.3s;
+}
+
+/* Category-specific styles using your color scheme */
+.category-logical_reasoning {
+    color: #009fdc;
+    border-left: 3px solid #009fdc;
+    background: linear-gradient(90deg, rgba(0, 159, 220, 0.1), rgba(30, 30, 30, 0.7));
+}
+
+.category-verbal_linguistic {
+    color: #009fdc;
+    border-left: 3px solid #009fdc;
+    background: linear-gradient(90deg, rgba(0, 159, 220, 0.1), rgba(30, 30, 30, 0.7));
+}
+
+.category-spatial_reasoning {
+    color: #009fdc;
+    border-left: 3px solid #009fdc;
+    background: linear-gradient(90deg, rgba(0, 159, 220, 0.1), rgba(30, 30, 30, 0.7));
+}
+
+.category-critical_thinking {
+    color: #009fdc;
+    border-left: 3px solid #009fdc;
+    background: linear-gradient(90deg, rgba(0, 159, 220, 0.1), rgba(30, 30, 30, 0.7));
+}
+
+/* Hover effect */
+.question-category:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    filter: brightness(1.1);
+}
     
     #questionText {
         color: white;
@@ -356,7 +414,70 @@
         flex-shrink: 0;
     }
 
-    /* Animations */
+    /* Spiral Transition Animation */
+@keyframes spiralOut {
+    0% {
+        transform: rotate(-90deg) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: rotate(-450deg) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes spiralIn {
+    0% {
+        transform: rotate(-450deg) scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: rotate(-90deg) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes numberSpiralOut {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: rotate(360deg) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes numberSpiralIn {
+    0% {
+        transform: rotate(-360deg) scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+    }
+}
+
+.timer-spiral-out {
+    animation: spiralOut 0.75s ease-in-out forwards;
+    transform-origin: center;
+}
+
+.timer-spiral-in {
+    animation: spiralIn 0.75s ease-in-out forwards;
+    transform-origin: center;
+}
+
+.timer-number-spiral-out {
+    animation: numberSpiralOut 0.75s ease-in-out forwards;
+}
+
+.timer-number-spiral-in {
+    animation: numberSpiralIn 0.75s ease-in-out forwards;
+}
+
+    /* Existing Animations Section */
     @keyframes synapseFlash {
         0% { opacity: 0.3; transform: scale(0.8); }
         50% { opacity: 1; transform: scale(1.2); }
@@ -478,6 +599,7 @@
         <div class="question-container">
             <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center relative flex flex-col min-h-[400px]">
                 <div class="flex-grow mb-8 overflow-y-auto">
+                    <div id="questionCategory" class="question-category"></div>
                     <h2 id="questionText" class="text-2xl font-bold text-white opacity-0 animate-fadeIn delay-[0.5s] max-w-xl mx-auto">
                         Press Start to begin!
                     </h2>
@@ -494,7 +616,7 @@
                 Start Game
             </button>
             <button id="quitButton" class="hidden bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
-                Quit Game
+                MindDuel
             </button>
         </div>
     </div>
@@ -509,5 +631,5 @@
 {% block extra_js %}
 
 <!-- Game Logic -->
-<script defer src="{% static 'quickplay/js/game.js' %}"></script>
+<script type="module" src="{% static 'quickplay/js/game.js' %}"></script>
 {% endblock %}

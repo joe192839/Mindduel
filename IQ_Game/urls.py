@@ -1,17 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
-from quiz.views import HomeView
-from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView  # Changed from HomeView import
 
 # Create a list of URLs that don't require authentication
 PUBLIC_PATHS = [
-    '',  # home
+    '', # home
     'accounts/login/',
     'accounts/logout/',
-    'quickplay/',  # Make quickplay accessible to anonymous users
+    'quickplay/', # Make quickplay accessible to anonymous users
     'quickplay/game/',
     'quickplay/anonymous-results/',
     'quickplay/api/start-game/',
@@ -22,17 +20,13 @@ PUBLIC_PATHS = [
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', HomeView.as_view(), name='home'),
-    path('quickplay/', include('quickplay.urls')),  # No login_required here
-    path('quiz/', login_required(include('quiz.urls'))),  # Only quiz requires login
-    path('accounts/login/', auth_views.LoginView.as_view(
-        template_name='accounts/login.html'
-    ), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(
-        next_page='home'
-    ), name='logout'),
+    path('', TemplateView.as_view(template_name='home.html'), name='home'),  # Updated to use TemplateView directly
+    path('quickplay/', include('quickplay.urls')),
+    path('accounts/', include('accounts.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
 ]
 
+# Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -24,8 +24,8 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
-    'quiz',
     'quickplay',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -97,7 +97,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Updated STATICFILES configuration
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'theme/static'),
 ]
 
 STATICFILES_FINDERS = [
@@ -107,6 +106,10 @@ STATICFILES_FINDERS = [
 
 # Static file serving with whitenoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+#Media
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Enhanced Security Settings
 SECURE_SSL_REDIRECT = not DEBUG
@@ -204,3 +207,4 @@ ANONYMOUS_REQUIRED_PATHS = [
     '/quickplay/api/submit-answer/',
     '/quickplay/api/end-game/',
 ]
+AUTH_USER_MODEL = 'accounts.MinduelUser'

@@ -3,15 +3,7 @@
 
 {% block content %}
 <div class="bg-[#009fdc] min-h-screen w-full">
-    <!-- Navigation Bar -->
-    <nav class="flex justify-between items-center bg-[#121212] p-4 sticky top-0 z-50">
-        <a href="{% url 'home' %}" class="text-2xl font-bold text-white">MindDuel</a>
-        <div class="flex gap-6">
-            <button id="loginButton" class="text-lg text-gray-300 hover:text-white">Login</button>
-            <a href="{% url 'quickplay:home' %}" class="text-lg text-gray-300 hover:text-white">Quickplay</a>
-        </div>
-    </nav>
-
+    
     <div class="container mx-auto px-4 py-8">
         {% if user.is_authenticated %}
             <!-- [Keep existing authenticated user results section unchanged] -->
@@ -20,18 +12,17 @@
                 <h1 class="text-4xl font-bold mb-8 text-white text-center">Game Results</h1>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Highest Speed Level -->
+                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Top Question Speed</h3>
+<p class="text-5xl font-bold text-white">{{ highest_speed_level }}s</p>
+<p class="text-xs text-gray-400 mt-2">Fastest time pressure reached</p>
+                    </div>
+                    
                     <!-- Final Score -->
                     <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
                         <h3 class="text-lg font-semibold text-gray-300 mb-2">Final Score</h3>
-                        <p class="text-5xl font-bold text-white">{{ game.score }}</p>
-                    </div>
-                    
-                    <!-- Time Taken -->
-                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Time Taken</h3>
-                        <p class="text-5xl font-bold text-white">
-                            {{ game.end_time|timeuntil:game.start_time }}
-                        </p>
+                        <p class="text-5xl font-bold text-white">{{ score }}</p>
                     </div>
                     
                     <!-- Accuracy -->
@@ -113,35 +104,30 @@
                 </div>
             </div>
         {% else %}
-            <!-- Anonymous User Results -->
-            <div class="bg-[#1e1e1e] rounded-lg shadow-lg p-8 mb-8">
-                <h1 class="text-4xl font-bold mb-8 text-white text-center">Game Results</h1>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Final Score -->
-                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Final Score</h3>
-                        <p class="text-5xl font-bold text-white">{{ score }}</p>
-                    </div>
-                    
-                    <!-- Accuracy -->
-                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Accuracy</h3>
-                        <p class="text-5xl font-bold text-white">{{ accuracy|floatformat:1 }}%</p>
-                    </div>
-                    
-                    <!-- Questions Answered -->
-                    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
-                        <h3 class="text-lg font-semibold text-gray-300 mb-2">Questions</h3>
-                        <p class="text-5xl font-bold text-white">{{ total_answers }}</p>
-                    </div>
-                </div>
-
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Highest Speed Level -->
+    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+        <h3 class="text-lg font-semibold text-gray-300 mb-2">Top Question Speed</h3>
+<p class="text-5xl font-bold text-white">{{ highest_speed_level }}s</p>
+<p class="text-xs text-gray-400 mt-2">Fastest time pressure reached</p>
+    </div>
+    
+    <!-- Final Score -->
+    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+        <h3 class="text-lg font-semibold text-gray-300 mb-2">Final Score</h3>
+        <p class="text-5xl font-bold text-white">{{ score }}</p>
+    </div>
+    
+    <!-- Accuracy -->
+    <div class="bg-[#121212] rounded-lg p-6 text-center transform hover:scale-105 transition-transform duration-300">
+        <h3 class="text-lg font-semibold text-gray-300 mb-2">Accuracy</h3>
+        <p class="text-5xl font-bold text-white">{{ accuracy|floatformat:1 }}%</p>
+    </div>
+</div>
                 <div class="bg-[#121212] border-2 border-[#009fdc] rounded-lg p-8 mb-8">
                     <h3 class="text-2xl font-bold text-white mb-4">Want to track your progress?</h3>
                     <p class="text-gray-300 mb-6">{{ message }}</p>
-                    <a href="{% url 'login' %}" class="inline-block bg-[#009fdc] text-white px-8 py-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 font-bold">
-                        Login Now
+                    <a href="{% url 'accounts:login' %}" class="inline-block bg-[#009fdc] text-white px-8 py-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 font-bold">                        Login Now
                     </a>
                 </div>
 

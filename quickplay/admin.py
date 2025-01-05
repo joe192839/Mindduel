@@ -69,6 +69,7 @@ class QuickplayQuestionAdmin(admin.ModelAdmin):
         payload = {"form": form}
         return render(request, "admin/csv_form.html", payload)
 
+        
 # Register other models
 admin.site.register(QuickplayGame)
 admin.site.register(QuickplayAnswer)

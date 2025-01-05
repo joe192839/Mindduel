@@ -8,11 +8,57 @@ from django.db.models import Avg, Sum, Case, When, IntegerField, F
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.contrib.auth import get_user_model  # Add this import
 from collections import defaultdict
 import json
 from .models import QuestionType, UserPreference, PracticeSession, Question, Choice, PracticeAnswer
 from .forms import PracticeSetupForm
 import random
+
+# Get the custom user model
+User = get_user_model()
+
+class HomeView(TemplateView):
+    template_name = 'home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get stats for the homepage with simpler average score calculation
+        total_sessions = PracticeSession.objects.filter(is_completed=True)
+        if total_sessions.exists():
+            correct_answers = PracticeAnswer.objects.filter(is_correct=True).count()
+            total_answers = PracticeAnswer.objects.count()
+            avg_score = (correct_answers / total_answers * 100) if total_answers > 0 else 0
+        else:
+            avg_score = 0
+        
+        context.update({
+            'total_users': User.objects.count(),  # Now uses the correct user model
+            'questions_answered': PracticeAnswer.objects.count(),
+            'practice_sessions': PracticeSession.objects.count(),
+            'average_score': round(avg_score, 1)
+        })
+        return context
+    
+# Basic views - Added login_required decorator to all function-based views
+@login_required
+def test_view(request):
+    return HttpResponse("Django server is working! This is the test view.")
+
+@login_required
+def singleplayer(request):
+    return render(request, 'singleplayer.html')
+
+@login_required
+def start_game(request):
+    if request.method != 'POST':
+        return redirect('quiz:singleplayer')
+    return HttpResponse("Game starting...")
+
+@login_required
+def play_game(request, game_id):
+    return HttpResponse(f"Playing game {game_id}")
 
 class HomeView(TemplateView):
     template_name = 'home.html'

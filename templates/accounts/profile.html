@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-[#121212] py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-gray-900 shadow-lg shadow-[#009fdc]/20 overflow-hidden sm:rounded-lg border border-[#009fdc]/30">
+            <!-- Profile Header with Level System -->
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-gray-900 to-[#009fdc]/10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">{{ user.username }}</h1>
+                        <p class="mt-1 text-sm text-gray-400">Mind Duelist since {{ user.date_joined|date:"M Y" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[#009fdc] text-2xl font-bold">Level {{ total_games|divisibleby:5|add:1 }}</div>
+                        <p class="text-sm text-gray-400">{{ total_games }} games played</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+                <div class="bg-gray-800 p-4 rounded-lg border border-[#009fdc]/20">
+                    <div class="text-gray-400 text-sm">Total Games</div>
+                    <div class="text-2xl text-white font-bold">{{ total_games }}</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-[#009fdc]/20">
+                    <div class="text-gray-400 text-sm">Average Score</div>
+                    <div class="text-2xl text-white font-bold">{{ avg_score }}</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-[#009fdc]/20">
+                    <div class="text-gray-400 text-sm">Win Rate</div>
+                    <div class="text-2xl text-white font-bold">{{ avg_score|floatformat:1 }}%</div>
+                </div>
+            </div>
+
+            <!-- Recent Games Section -->
+            <div class="px-4 py-5 sm:px-6">
+                <h2 class="text-lg font-medium text-white mb-4">Recent Games</h2>
+                {% if game_history %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-800">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-sm font-semibold text-gray-300">Date</th>
+                                <th class="px-3 py-3 text-left text-sm font-semibold text-gray-300">Score</th>
+                                <th class="px-3 py-3 text-left text-sm font-semibold text-gray-300">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for game in game_history %}
+                            <tr class="hover:bg-gray-800/50 transition-colors">
+                                <td class="px-3 py-4 text-sm text-gray-300">{{ game.start_time|date:"M d, Y" }}</td>
+                                <td class="px-3 py-4 text-sm {% if game.score > avg_score %}text-green-400{% else %}text-gray-300{% endif %}">
+                                    {{ game.score }}
+                                </td>
+                                <td class="px-3 py-4 text-sm">
+                                    {% if game.is_completed %}
+                                    <span class="inline-flex items-center rounded-full bg-[#009fdc]/20 px-2.5 py-0.5 text-xs font-medium text-[#009fdc]">
+                                        Completed
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-yellow-400/20 px-2.5 py-0.5 text-xs font-medium text-yellow-400">
+                                        In Progress
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-8 bg-gray-800/50 rounded-lg">
+                    <p class="text-gray-400">No games played yet</p>
+                    <a href="{% url 'quickplay:home' %}" class="mt-2 inline-block text-[#009fdc] hover:text-[#007bb5]">
+                        Start your first game →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
