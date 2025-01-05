@@ -7,34 +7,10 @@
 <!-- Custom fonts -->
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
 <style>
-    /* Color Variables */
-    :root {
-        /* Primary Colors */
-        --primary-100: #E6F6FF;
-        --primary-200: #B3E3FF;
-        --primary-300: #80D0FF;
-        --primary-400: #4DBDFF;
-        --primary-500: #009fdc;  /* Main Brand Color */
-        --primary-600: #0080B3;
-        --primary-700: #006080;
-        
-        /* Accent Colors */
-        --accent-coral: #CD4B45;
-        --accent-teal: #00B8A9;
-        
-        /* Dark Theme Colors */
-        --surface-dark: #1e1e1e;
-        --surface-darker: #121212;
-        
-        /* Gradients */
-        --gradient-primary: linear-gradient(135deg, var(--primary-500), var(--accent-coral));
-        --gradient-surface: linear-gradient(180deg, var(--surface-dark), var(--surface-darker));
-    }
-
     body {
         font-family: 'League Spartan', sans-serif;
         overflow-x: hidden;
-        background: linear-gradient(135deg, var(--primary-500), var(--accent-coral));
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         min-height: 100vh;
     }
 
@@ -52,21 +28,21 @@
 
     @keyframes float {
         0% { transform: translateY(0px) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(1deg); }
+        50% { transform: translateY(-10px) rotate(2deg); }
         100% { transform: translateY(0px) rotate(0deg); }
     }
 
     @keyframes pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(205, 75, 69, 0.4); }
-        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(205, 75, 69, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(205, 75, 69, 0); }
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 159, 220, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 159, 220, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 159, 220, 0); }
     }
 
     .animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
     .animate-float { animation: float 3s ease-in-out infinite; }
     .animate-pulse { animation: pulse 2s ease-in-out infinite; }
 
-    /* Particle container */
+    /* Enhanced particle container */
     #particles-js {
         position: fixed;
         width: 100%;
@@ -76,17 +52,16 @@
         z-index: 0;
     }
 
-    /* Enhanced Category cards */
+    /* Enhanced category cards */
     .category-card {
-        background: rgba(30, 30, 30, 0.8);
-        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
         padding: 2rem;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
 
     .category-card::before {
@@ -96,58 +71,56 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(45deg, transparent, rgba(26, 26, 26, 0.2));
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1));
         transform: translateX(-100%);
         transition: transform 0.6s;
     }
 
     .category-card:hover {
-        border-color: var(--accent-teal);
         transform: translateY(-5px);
-        background: rgba(30, 30, 30, 0.9);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
 
     .category-card:hover::before {
         transform: translateX(100%);
     }
 
-    /* Enhanced Daily challenge section */
+    /* Enhanced daily challenge section */
     .daily-challenge {
-        background: rgba(30, 30, 30, 0.85);
+        background: rgba(0, 159, 220, 0.05);
         border-radius: 20px;
         padding: 2.5rem;
         margin: 3rem 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(12px);
+        border: 2px solid rgba(0, 159, 220, 0.2);
+        box-shadow: 0 0 20px rgba(0, 159, 220, 0.1);
+        backdrop-filter: blur(10px);
     }
 
-    /* Enhanced Stats counter */
+    /* Enhanced stats counter */
     .stat-counter {
-        background: rgba(30, 30, 30, 0.8);
+        background: rgba(255, 255, 255, 0.05);
         padding: 1.5rem;
         border-radius: 12px;
         margin: 0.75rem;
         transition: all 0.3s ease;
         min-width: 160px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
     .stat-counter:hover {
-        border-color: var(--accent-teal);
-        transform: translateY(-3px);
-        background: rgba(30, 30, 30, 0.9);
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
     }
 
-    /* Enhanced Interactive CTA */
+    /* Enhanced interactive CTA */
     .interactive-cta {
         position: relative;
         padding: 2rem;
         margin-top: 3rem;
-        background: rgba(30, 30, 30, 0.85);
+        background: rgba(255, 255, 255, 0.02);
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .shape-sequence {
@@ -160,18 +133,17 @@
     .shape {
         width: 48px;
         height: 48px;
-        border: 2px solid white;
+        border: 2px solid #009fdc;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .shape:hover {
-        background-color: rgba(26, 26, 26, 0.2);
+        background-color: rgba(0, 159, 220, 0.2);
         transform: scale(1.1);
-        border-color: var(--accent-teal);
     }
 
-    /* Enhanced Activity feed */
+    /* Enhanced activity feed */
     .activity-feed {
         position: fixed;
         right: 24px;
@@ -179,13 +151,13 @@
         width: 320px;
         max-height: 240px;
         overflow-y: auto;
-        background: rgba(30, 30, 30, 0.85);
+        background: rgba(15, 23, 42, 0.95);
         border-radius: 16px;
         padding: 1.5rem;
         z-index: 100;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
 
     .activity-item {
@@ -195,17 +167,30 @@
         transition: all 0.3s ease;
     }
 
-    .activity-item:hover {
-        background: rgba(26, 26, 26, 0.1);
-    }
-
     .activity-item:last-child {
         border-bottom: none;
     }
 
-    /* Enhanced Button styles */
+    /* Enhanced form elements */
+    input[type="number"] {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #009fdc;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 159, 220, 0.2);
+    }
+
+    /* Enhanced button styles */
     .btn-primary {
-        background: var(--gradient-primary);
+        background: #009fdc;
         color: white;
         padding: 0.75rem 1.5rem;
         border-radius: 8px;
@@ -216,9 +201,9 @@
     }
 
     .btn-primary:hover {
+        background: #007bb5;
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3);
-        background: linear-gradient(135deg, var(--accent-black), var(--primary-500));
+        box-shadow: 0 4px 12px rgba(0, 159, 220, 0.2);
     }
 </style>
 {% endblock %}
@@ -231,16 +216,16 @@
 <div class="container mx-auto px-4 py-12">
     <div class="flex flex-col items-center justify-center min-h-[80vh] relative">
         <!-- Title -->
-        <h1 class="text-6xl font-bold leading-tight mb-8 opacity-0 animate-fadeIn delay-[0.5s] relative z-10 text-white">
+        <h1 class="text-6xl font-bold leading-tight mb-8 opacity-0 animate-fadeIn delay-[0.5s] relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-400">
             Sharpen Your Mind<br>Through Competition
         </h1>
 
         <!-- Daily Challenge -->
         <div class="daily-challenge opacity-0 animate-fadeIn delay-[0.8s] w-full max-w-2xl">
-            <h2 class="text-3xl font-bold mb-6 text-white">Daily Brain Teaser</h2>
-            <p class="mb-6 text-xl text-white" id="daily-puzzle">Complete the sequence: 2, 6, 12, 20, ?</p>
+            <h2 class="text-3xl font-bold mb-6">Daily Brain Teaser</h2>
+            <p class="mb-6 text-xl" id="daily-puzzle">Complete the sequence: 2, 6, 12, 20, ?</p>
             <div class="flex justify-center gap-6">
-                <input type="number" id="puzzle-answer" class="w-48 text-lg bg-white bg-opacity-20 border border-white border-opacity-20 rounded-lg px-4 py-2 text-white placeholder-white placeholder-opacity-60" placeholder="Your answer">
+                <input type="number" id="puzzle-answer" class="w-48 text-lg" placeholder="Your answer">
                 <button onclick="checkAnswer()" class="btn-primary">Submit</button>
             </div>
         </div>
@@ -248,42 +233,42 @@
         <!-- Category Preview -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 w-full max-w-6xl opacity-0 animate-fadeIn delay-[1s]">
             <div class="category-card" onclick="showCategoryPreview('logic')">
-                <h3 class="text-2xl font-bold mb-4 text-white">Logic</h3>
-                <p class="text-white text-opacity-90">Test your deductive reasoning</p>
+                <h3 class="text-2xl font-bold mb-4">Logic</h3>
+                <p class="text-gray-300">Test your deductive reasoning</p>
             </div>
             <div class="category-card" onclick="showCategoryPreview('pattern')">
-                <h3 class="text-2xl font-bold mb-4 text-white">Pattern Recognition</h3>
-                <p class="text-white text-opacity-90">Find hidden sequences</p>
+                <h3 class="text-2xl font-bold mb-4">Pattern Recognition</h3>
+                <p class="text-gray-300">Find hidden sequences</p>
             </div>
             <div class="category-card" onclick="showCategoryPreview('spatial')">
-                <h3 class="text-2xl font-bold mb-4 text-white">Spatial Reasoning</h3>
-                <p class="text-white text-opacity-90">Navigate complex geometries</p>
+                <h3 class="text-2xl font-bold mb-4">Spatial Reasoning</h3>
+                <p class="text-gray-300">Navigate complex geometries</p>
             </div>
             <div class="category-card" onclick="showCategoryPreview('math')">
-                <h3 class="text-2xl font-bold mb-4 text-white">Mathematical Thinking</h3>
-                <p class="text-white text-opacity-90">Solve numerical challenges</p>
+                <h3 class="text-2xl font-bold mb-4">Mathematical Thinking</h3>
+                <p class="text-gray-300">Solve numerical challenges</p>
             </div>
         </div>
 
         <!-- Stats Section -->
         <div class="flex flex-wrap justify-center gap-6 mt-12 opacity-0 animate-fadeIn delay-[1.2s]">
             <div class="stat-counter">
-                <h4 class="text-2xl font-bold mb-2 text-white" id="online-players">Loading...</h4>
-                <p class="text-white text-opacity-80">Players Online</p>
+                <h4 class="text-2xl font-bold mb-2" id="online-players">Loading...</h4>
+                <p class="text-gray-400">Players Online</p>
             </div>
             <div class="stat-counter">
-                <h4 class="text-2xl font-bold mb-2 text-white" id="puzzles-solved">Loading...</h4>
-                <p class="text-white text-opacity-80">Puzzles Solved Today</p>
+                <h4 class="text-2xl font-bold mb-2" id="puzzles-solved">Loading...</h4>
+                <p class="text-gray-400">Puzzles Solved Today</p>
             </div>
             <div class="stat-counter">
-                <h4 class="text-2xl font-bold mb-2 text-white" id="new-champions">Loading...</h4>
-                <p class="text-white text-opacity-80">New Champions</p>
+                <h4 class="text-2xl font-bold mb-2" id="new-champions">Loading...</h4>
+                <p class="text-gray-400">New Champions</p>
             </div>
         </div>
 
         <!-- Interactive CTA -->
         <div class="interactive-cta opacity-0 animate-fadeIn delay-[1.5s] w-full max-w-xl">
-            <p class="text-xl mb-6 text-white">Complete the sequence to start:</p>
+            <p class="text-xl mb-6">Complete the sequence to start:</p>
             <div class="shape-sequence">
                 <div class="shape rounded-none" data-shape="square"></div>
                 <div class="shape rounded-full" data-shape="circle"></div>
@@ -299,25 +284,26 @@
 
 <!-- Activity Feed -->
 <div class="activity-feed opacity-0 animate-fadeIn delay-[2s]">
-    <h3 class="text-xl font-bold mb-4 text-white">Live Activity</h3>
-    <div id="activity-list" class="text-white"></div>
+    <h3 class="text-xl font-bold mb-4">Live Activity</h3>
+    <div id="activity-list"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+
 <!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-    // Initialize particles background with dark elegant colors
+    // Initialize particles background
     particlesJS('particles-js', {
         particles: {
             number: { value: 80, density: { enable: true, value_area: 800 } },
-            color: { value: '#1a1a1a' },  // Deep elegant black
+            color: { value: '#009fdc' },
             shape: { type: 'circle' },
-            opacity: { value: 0.3, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false } },
-            size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1, sync: false } },
-            line_linked: { enable: true, distance: 150, color: '#2a2a2a', opacity: 0.2, width: 1 },
-            move: { enable: true, speed: 4, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+            opacity: { value: 0.5, random: false },
+            size: { value: 3, random: true },
+            line_linked: { enable: true, distance: 150, color: '#009fdc', opacity: 0.4, width: 1 },
+            move: { enable: true, speed: 6, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
         },
         interactivity: {
             detect_on: 'canvas',
@@ -362,7 +348,7 @@
         shape.addEventListener('click', () => {
             const shapeType = shape.dataset.shape;
             currentSequence.push(shapeType);
-            shape.style.backgroundColor = 'rgba(26, 26, 26, 0.5)';  // Updated to use accent black
+            shape.style.backgroundColor = 'rgba(0, 159, 220, 0.5)';
 
             if (currentSequence.length === correctSequence.length) {
                 if (JSON.stringify(currentSequence) === JSON.stringify(correctSequence)) {
@@ -419,3 +405,4 @@
     }
 </script>
 {% endblock %}
+
