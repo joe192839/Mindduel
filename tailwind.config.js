@@ -7,7 +7,23 @@ module.exports = {
     "./templates/**/*.html",          // For any other templates
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          50: '#F0FBFF',
+          100: '#E6F6FF',
+          200: '#B3E3FF',
+          300: '#80D0FF',
+          400: '#4DBDFF',
+          500: '#009fdc',
+          600: '#0080B3',
+          700: '#006080',
+        },
+      },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(180deg, var(--primary-500) 0%, var(--primary-200) 100%)',
+      },
+    },
   },
   plugins: [],
 }

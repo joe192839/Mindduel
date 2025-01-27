@@ -63,6 +63,13 @@ class QuickplayGame {
                 this.exitFullscreenMode();
             }
         });
+        const questionTypeToggle = document.getElementById('questionTypeToggle');
+    if (questionTypeToggle) {
+        questionTypeToggle.addEventListener('click', () => {
+            this.apiService.setUseAIQuestions(!this.apiService.useAIQuestions);
+            questionTypeToggle.textContent = `Question Mode: ${this.apiService.useAIQuestions ? 'AI' : 'Regular'}`;
+        });
+    }
     }
 
     async startGame() {

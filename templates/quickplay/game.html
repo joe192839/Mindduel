@@ -566,6 +566,7 @@
         console.log('URLs configured:', window.QUICKPLAY_URLS);
     
         document.addEventListener('DOMContentLoaded', function() {
+            
             const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
             console.log('CSRF input element exists:', !!csrfInput);
             console.log('CSRF value from input:', csrfInput ? csrfInput.value : 'not found');
@@ -610,6 +611,12 @@
             </div>
         </div>
 
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="questionTypeToggle" class="bg-white text-[#009fdc] font-bold py-2 px-4 rounded hover:bg-gray-100 transition-all duration-300">
+                Question Mode: Regular
+            </button>
+        </div>
+        
         <!-- Game Controls -->
         <div class="flex justify-center space-x-4 p-4 game-controls">
             <button id="startButton" class="bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-100 transition-all duration-300">
@@ -629,6 +636,8 @@
 {% endblock %}
 
 {% block extra_js %}
+
+<script src="{% static 'quickplay/js/questionApi.js' %}"></script>
 
 <!-- Game Logic -->
 <script type="module" src="{% static 'quickplay/js/game.js' %}"></script>

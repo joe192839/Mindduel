@@ -13,29 +13,38 @@
         --primary-100: #E6F6FF;
         --primary-200: #B3E3FF;
         --primary-300: #80D0FF;
-        --primary-400: #4DBDFF;
+        --primary-400: #4DBDFF;  /* We'll use this as our bottom gradient color instead */
         --primary-500: #009fdc;  /* Main Brand Color */
         --primary-600: #0080B3;
         --primary-700: #006080;
-        
-        /* Accent Colors */
-        --accent-navy: #1B2A4A;
-        --accent-teal: #00B8A9;
         
         /* Dark Theme Colors */
         --surface-dark: #1e1e1e;
         --surface-darker: #121212;
         
         /* Gradients */
-        --gradient-primary: linear-gradient(135deg, var(--primary-500), var(--accent-navy));
+        --gradient-primary: linear-gradient(180deg, var(--primary-500), var(--primary-400));
         --gradient-surface: linear-gradient(180deg, var(--surface-dark), var(--surface-darker));
     }
 
     body {
         font-family: 'League Spartan', sans-serif;
         overflow-x: hidden;
-        background: linear-gradient(135deg, var(--primary-500), var(--accent-navy));
+        background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-400) 100%);
         min-height: 100vh;
+        position: relative;
+    }
+
+    body::after {
+        content: '';
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40%;
+        background: linear-gradient(to bottom, transparent, var(--primary-400));
+        opacity: 0.4;
+        pointer-events: none;
     }
 
     /* Enhanced animations */
@@ -57,9 +66,9 @@
     }
 
     @keyframes pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(27, 42, 74, 0.4); }
-        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(27, 42, 74, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(27, 42, 74, 0); }
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 159, 220, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 159, 220, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 159, 220, 0); }
     }
 
     .animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
@@ -73,10 +82,10 @@
         height: 100%;
         top: 0;
         left: 0;
-        z-index: 0;
+        z-index: 1;
     }
 
-    /* Enhanced Category cards */
+    /* Category cards */
     .category-card {
         background: rgba(30, 30, 30, 0.8);
         backdrop-filter: blur(12px);
@@ -102,7 +111,6 @@
     }
 
     .category-card:hover {
-        border-color: var(--accent-teal);
         transform: translateY(-5px);
         background: rgba(30, 30, 30, 0.9);
     }
@@ -111,7 +119,7 @@
         transform: translateX(100%);
     }
 
-    /* Enhanced Daily challenge section */
+    /* Daily challenge */
     .daily-challenge {
         background: rgba(30, 30, 30, 0.85);
         border-radius: 20px;
@@ -122,7 +130,7 @@
         backdrop-filter: blur(12px);
     }
 
-    /* Enhanced Stats counter */
+    /* Stats counter */
     .stat-counter {
         background: rgba(30, 30, 30, 0.8);
         padding: 1.5rem;
@@ -135,12 +143,11 @@
     }
 
     .stat-counter:hover {
-        border-color: var(--accent-teal);
         transform: translateY(-3px);
         background: rgba(30, 30, 30, 0.9);
     }
 
-    /* Enhanced Interactive CTA */
+    /* Interactive CTA */
     .interactive-cta {
         position: relative;
         padding: 2rem;
@@ -168,10 +175,10 @@
     .shape:hover {
         background-color: rgba(26, 26, 26, 0.2);
         transform: scale(1.1);
-        border-color: var(--accent-teal);
+        border-color: white;
     }
 
-    /* Enhanced Activity feed */
+    /* Activity feed */
     .activity-feed {
         position: fixed;
         right: 24px;
@@ -203,7 +210,7 @@
         border-bottom: none;
     }
 
-    /* Enhanced Button styles */
+    /* Button styles */
     .btn-primary {
         background: var(--gradient-primary);
         color: white;
@@ -218,7 +225,6 @@
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3);
-        background: linear-gradient(135deg, var(--accent-black), var(--primary-500));
     }
 </style>
 {% endblock %}
@@ -308,16 +314,15 @@
 <!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-    // Initialize particles background with dark elegant colors
+    // Initialize particles background
     particlesJS('particles-js', {
         particles: {
             number: { value: 80, density: { enable: true, value_area: 800 } },
-            color: { value: '#1a1a1a' },  // Deep elegant black
+            color: { value: '#1a1a1a' },
             shape: { type: 'circle' },
-            opacity: { value: 0.3, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false } },
-            size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1, sync: false } },
-            line_linked: { enable: true, distance: 150, color: '#2a2a2a', opacity: 0.2, width: 1 },
-            move: { enable: true, speed: 4, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+            opacity: { value: 0.3, random: false, anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false } },            size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1, sync: false } },
+            line_linked: { enable: true, distance: 150, color: '#1a1a1a', opacity: 0.3, width: 1 },
+            move: { enable: true, speed: 3, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
         },
         interactivity: {
             detect_on: 'canvas',
@@ -362,7 +367,7 @@
         shape.addEventListener('click', () => {
             const shapeType = shape.dataset.shape;
             currentSequence.push(shapeType);
-            shape.style.backgroundColor = 'rgba(26, 26, 26, 0.5)';  // Updated to use accent black
+            shape.style.backgroundColor = 'rgba(26, 26, 26, 0.5)';
 
             if (currentSequence.length === correctSequence.length) {
                 if (JSON.stringify(currentSequence) === JSON.stringify(correctSequence)) {

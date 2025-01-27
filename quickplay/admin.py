@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import QuickplayQuestion, QuickplayGame, QuickplayAnswer, Leaderboard
+from .models import QuickplayQuestion, QuickplayGame, QuickplayAnswer, Leaderboard, AIQuestion
 from django.urls import path
 from django.shortcuts import render, redirect
 from django import forms
@@ -30,7 +30,6 @@ class QuickplayQuestionAdmin(admin.ModelAdmin):
             
             # First, clear existing questions
             QuickplayQuestion.objects.all().delete()
-            
             data_set = csv_file.read().decode('UTF-8')
             io_string = io.StringIO(data_set)
             next(io_string)  # Skip the header row
@@ -45,7 +44,6 @@ class QuickplayQuestionAdmin(admin.ModelAdmin):
             created_count = 0
             for row in csv.reader(io_string, delimiter=',', quotechar='"'):
                 category = category_mapping.get(row[0].strip(), 'logical_reasoning')
-                
                 _, created = QuickplayQuestion.objects.get_or_create(
                     question_text=row[1],
                     defaults={
@@ -64,12 +62,23 @@ class QuickplayQuestionAdmin(admin.ModelAdmin):
             
             self.message_user(request, f"Successfully imported {created_count} questions")
             return redirect("..")
-            
+        
         form = CsvImportForm()
         payload = {"form": form}
         return render(request, "admin/csv_form.html", payload)
 
-        
+@admin.register(AIQuestion)
+class AIQuestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text', 'category', 'difficulty', 'created_at', 'times_used')
+    list_filter = ('category', 'difficulty', 'created_at')
+    search_fields = ('question_text', 'correct_answer')
+    readonly_fields = ('created_at', 'last_used', 'times_used')
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Editing an existing object
+            return self.readonly_fields + ('created_at',)
+        return self.readonly_fields
+
 # Register other models
 admin.site.register(QuickplayGame)
 admin.site.register(QuickplayAnswer)

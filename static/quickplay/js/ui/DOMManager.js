@@ -15,7 +15,6 @@ export class DOMManager {
         this.questionCategory = document.getElementById('questionCategory');
         this.optionsContainer = document.getElementById('options');
 
-        
         // Control buttons
         this.quitButton = document.getElementById('quitButton');
         this.startButton = document.getElementById('startButton');
@@ -53,7 +52,7 @@ export class DOMManager {
         this.optionsContainer.innerHTML = '';
         
         setTimeout(() => {
-            // Display and format category
+            // Handle category display
             if (questionData.category) {
                 const categoryMap = {
                     'logical_reasoning': 'Logical Reasoning',
@@ -67,30 +66,33 @@ export class DOMManager {
                 this.questionCategory.style.opacity = '1';
                 this.questionCategory.style.display = 'inline-block';
                 
-                // Add category-specific styling
                 this.questionCategory.className = 'question-category';
                 this.questionCategory.classList.add(`category-${questionData.category}`);
             } else {
                 this.questionCategory.style.display = 'none';
             }
 
-            this.questionElement.textContent = questionData.question_text;
+            // Set question text - handle both regular and AI questions
+            const questionText = questionData.is_ai_generated ? 
+                questionData.question_text : 
+                questionData.question_text;
+            this.questionElement.textContent = questionText;
             this.questionElement.style.opacity = '1';
             
+            // Get options - handle both regular and AI questions
             const options = [
-                questionData.option_1, 
-                questionData.option_2, 
-                questionData.option_3, 
+                questionData.option_1,
+                questionData.option_2,
+                questionData.option_3,
                 questionData.option_4
             ];
             
             options.forEach((option, index) => {
                 const button = document.createElement('button');
-                // Add specific styling for left buttons (index 0 and 2)
+                // Maintain your existing button styling
                 if (index === 0 || index === 2) {
                     button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded-r hover:bg-gray-100 transition-all duration-300';
                 } else {
-                    // Right buttons (index 1 and 3)
                     button.className = 'option-button bg-white text-[#009fdc] font-bold py-3 px-6 rounded-l hover:bg-gray-100 transition-all duration-300';
                 }
                 button.textContent = option;
@@ -102,7 +104,6 @@ export class DOMManager {
         }, 100);
     }
 
-    // Other methods remain the same
     updateScore(score) {
         this.scoreElement.textContent = score;
     }

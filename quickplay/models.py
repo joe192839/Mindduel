@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings  # Add this import
+from django.conf import settings
 
 class QuickplayQuestion(models.Model):
     DIFFICULTY_CHOICES = [
@@ -29,8 +29,36 @@ class QuickplayQuestion(models.Model):
     class Meta:
         ordering = ['id']
 
+class AIQuestion(models.Model):
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard')
+    ]
+    CATEGORY_CHOICES = [
+        ('logical_reasoning', 'Logical Reasoning'),
+        ('quantitative_reasoning', 'Quantitative Reasoning'),
+        ('linguistic_reasoning', 'Linguistic Reasoning'),
+        ('spatial_reasoning', 'Spatial Reasoning')
+    ]
+    
+    question_text = models.TextField()
+    correct_answer = models.CharField(max_length=255)
+    wrong_answers = models.JSONField()  # Store alternative answers
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES)
+    category = models.CharField(max_length=25, choices=CATEGORY_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    times_used = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.question_text[:50]}..."
+
+    class Meta:
+        ordering = ['-created_at']
+
 class QuickplayGame(models.Model):
-    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
+    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
     score = models.IntegerField(default=0)
@@ -64,7 +92,7 @@ class QuickplayAnswer(models.Model):
         ordering = ['answered_at']
 
 class Leaderboard(models.Model):
-    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
+    player = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.IntegerField()
     date_achieved = models.DateTimeField(auto_now_add=True)
     time_taken = models.IntegerField()  # in seconds

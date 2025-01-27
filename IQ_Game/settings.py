@@ -1,15 +1,44 @@
 import os
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Add debug prints for OpenAI configuration
+print(f"OPENAI_API_KEY set: {'OPENAI_API_KEY' in os.environ}")
+print(f"OPENAI_MODEL: {os.getenv('OPENAI_MODEL')}")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = 'RENDER' not in os.environ
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'RENDER' not in os.environ
+# API Keys
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# OpenAI Configuration
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
+OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', 1000))
+OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', 0.7))
+OPENAI_PRESENCE_PENALTY = float(os.getenv('OPENAI_PRESENCE_PENALTY', 0.0))
+OPENAI_FREQUENCY_PENALTY = float(os.getenv('OPENAI_FREQUENCY_PENALTY', 0.0))
+OPENAI_TOP_P = float(os.getenv('OPENAI_TOP_P', 0.9))
+OPENAI_STOP = os.getenv('OPENAI_STOP', '\n\n').split(',')
+
+# Cache configuration for rate limiting and question storage
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-mindduel',
+    }
+}
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com', 'mindduel-4.onrender.com']
 
@@ -26,7 +55,20 @@ INSTALLED_APPS = [
     'django_browser_reload',
     'quickplay',
     'accounts',
+    'rest_framework',  # Added for AI API endpoints
 ]
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -112,7 +154,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Enhanced Security Settings
-SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -161,12 +202,12 @@ LOGGING = {
             'style': '{',
         },
         'loggers': {
-    'django.security.csrf': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-        'propagate': True,
-    },
-},
+            'django.security.csrf': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+        },
     },
     'handlers': {
         'console': {
@@ -207,4 +248,5 @@ ANONYMOUS_REQUIRED_PATHS = [
     '/quickplay/api/submit-answer/',
     '/quickplay/api/end-game/',
 ]
+
 AUTH_USER_MODEL = 'accounts.MinduelUser'

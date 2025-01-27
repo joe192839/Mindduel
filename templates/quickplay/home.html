@@ -1,12 +1,64 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Quick Play - MindDuel{% endblock %}
 
 {% block extra_css %}
 <style>
+    /* Color Variables */
+    :root {
+        /* Primary Colors */
+        --primary-100: #E6F6FF;
+        --primary-200: #B3E3FF;
+        --primary-300: #80D0FF;
+        --primary-400: #4DBDFF;
+        --primary-500: #009fdc;
+        --primary-600: #0080B3;
+        --primary-700: #006080;
+        
+        /* Dark Theme Colors */
+        --surface-dark: #1e1e1e;
+        --surface-darker: #121212;
+        
+        /* Gradients */
+        --gradient-primary: linear-gradient(180deg, var(--primary-500), var(--primary-400));
+        --gradient-surface: linear-gradient(180deg, var(--surface-dark), var(--surface-darker));
+    }
+
+    body {
+        background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-400) 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    body::after {
+        content: '';
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40%;
+        background: linear-gradient(to bottom, transparent, var(--primary-400));
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* Particle container */
+    #particles-js {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
     /* Force a larger font size for Quick Play title */
     .quickplay-title {
         font-size: 4rem !important;
+        position: relative;
+        z-index: 2;
     }
 
     @keyframes fadeIn {
@@ -41,26 +93,45 @@
     label:hover {
         color: #009fdc;
     }
+
+    /* Category container styling */
+    .category-container {
+        background: rgba(30, 30, 30, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Content wrapper to ensure elements are above particles */
+    .content-wrapper {
+        position: relative;
+        z-index: 2;
+    }
 </style>
 {% endblock %}
 
-
 {% block content %}
+<!-- Particle background -->
+<div id="particles-js"></div>
 
 <!-- Quick Play Section -->
-<div class="flex flex-col items-center justify-center min-h-screen text-center px-4 text-white">
+<div class="content-wrapper flex flex-col items-center justify-center min-h-screen text-center px-4 text-white">
     <!-- Title -->
     <h1 class="quickplay-title font-bold mb-6 opacity-0 animate-fadeIn delay-[0.5s]">
         Quickplay
     </h1>
 
     <!-- Select Categories -->
-    <p class="text-2xl mb-6 opacity-0 animate-fadeIn delay-[1s]">
+    <p class="text-2xl mb-6 opacity-0 animate-fadeIn delay-[1s] relative z-2">
         Select Categories:
     </p>
 
-    <form id="categoryForm" action="{% url 'quickplay:game' %}" method="GET" class="flex flex-col items-center gap-4 mb-8 opacity-0 animate-fadeIn delay-[1.5s]">        <!-- Categories Options -->
-        <div class="space-y-4 bg-[#1e1e1e] p-6 rounded-lg">
+    <form id="categoryForm" action="{% url 'quickplay:game' %}" method="GET"
+        class="flex flex-col items-center gap-4 mb-8 opacity-0 animate-fadeIn delay-[1.5s]">
+        <!-- Categories Options -->
+        <div class="category-container space-y-4 p-6">
             <label class="flex items-center text-lg hover:text-[#009fdc] transition-colors">
                 <input type="checkbox" name="categories" value="logical_reasoning" class="mr-2">
                 Logical Reasoning
@@ -80,7 +151,8 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="w-full md:w-auto mt-8 bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-200 transition-all duration-300">
+        <button type="submit"
+            class="w-full md:w-auto mt-8 bg-white text-[#009fdc] font-bold py-3 px-8 rounded hover:bg-gray-200 transition-all duration-300 relative z-2">
             Test Your Brain!
         </button>
     </form>
@@ -88,7 +160,30 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
+    // Initialize particles background
+    particlesJS('particles-js', {
+        particles: {
+            number: { value: 80, density: { enable: true, value_area: 800 } },
+            color: { value: '#1a1a1a' },
+            shape: { type: 'circle' },
+            opacity: { value: 0.3, random: false, anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false } },
+            size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1, sync: false } },
+            line_linked: { enable: true, distance: 150, color: '#1a1a1a', opacity: 0.3, width: 1 },
+            move: { enable: true, speed: 3, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+        },
+        interactivity: {
+            detect_on: 'canvas',
+            events: {
+                onhover: { enable: true, mode: 'repulse' },
+                onclick: { enable: true, mode: 'push' },
+                resize: true
+            }
+        }
+    });
+
     // Form validation
     document.getElementById('categoryForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -104,16 +199,13 @@
     const loginButton = document.getElementById('loginButton');
     const loginPopup = document.getElementById('loginPopup');
     const popupClose = document.getElementById('popupClose');
-
     if (loginButton && loginPopup && popupClose) {
         loginButton.addEventListener('click', () => {
             loginPopup.classList.add('active');
         });
-
         popupClose.addEventListener('click', () => {
             loginPopup.classList.remove('active');
         });
-
         window.addEventListener('click', (e) => {
             if (e.target === loginPopup) {
                 loginPopup.classList.remove('active');
