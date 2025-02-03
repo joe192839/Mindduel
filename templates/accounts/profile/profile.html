@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ user.username }}'s Profile - MindDuel{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile/core.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile/animations.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile/components.css' %}">
+{% endblock %}
+{% block content %}
+<div class="neural-bg"></div>
+<div class="container mx-auto px-4 py-8">
+    {% include 'accounts/profile/components/header.html' %}
+    <div class="mb-8">
+            <!-- Stats Navigation Tabs -->
+            <div class="stats-tabs mb-6">
+                <div class="stats-tab active" data-tab="overview">Overview</div>
+                <div class="stats-tab" data-tab="category">Category Performance</div>
+                <div class="stats-tab" data-tab="timing">Timing Analysis</div>
+            </div>
+            <!-- Stats Content -->
+            <div class="stats-content" id="overview-stats">
+                {% include 'accounts/profile/components/stats/overview.html' %}
+            </div>
+            <div class="stats-content hidden" id="category-stats">
+                {% include 'accounts/profile/components/stats/category.html' %}
+            </div>
+            <div class="stats-content hidden" id="timing-stats">
+                {% include 'accounts/profile/components/stats/timing.html' %}
+            </div>
+        </div>
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Full Width Column -->
+        <div class="lg:col-span-3">
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/profile/tabs.js' %}"></script>
+<script src="{% static 'js/profile/profile-upload.js' %}"></script>
+<script src="{% static 'js/flag-selector.js' %}"></script>  
+{% endblock %}

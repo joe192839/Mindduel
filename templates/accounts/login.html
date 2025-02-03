@@ -1,46 +1,258 @@
 {% extends 'base.html' %}
+<!-- DEBUG: Template version 1.0 -->
+<div style="background: red; color: white; padding: 10px; position: fixed; top: 0; left: 0; z-index: 9999;">
+    DEBUG: This is the new template
+</div>
+<!-- End DEBUG -->
+{% load static %}
+
+{% block title %}MindDuel - Login{% endblock %}
+
+{% block extra_css %}
+<!-- Custom fonts -->
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    /* Color Variables */
+    :root {
+        --primary-100: #E6F6FF;
+        --primary-200: #B3E3FF;
+        --primary-300: #80D0FF;
+        --primary-400: #4DBDFF;
+        --primary-500: #009fdc;
+        --primary-600: #0080B3;
+        --primary-700: #006080;
+        
+        --surface-dark: #1e1e1e;
+        --surface-darker: #121212;
+        
+        --gradient-primary: linear-gradient(180deg, var(--primary-500), var(--primary-400));
+        --gradient-surface: linear-gradient(180deg, var(--surface-dark), var(--surface-darker));
+    }
+
+    body {
+        font-family: 'League Spartan', sans-serif;
+        background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-400) 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Enhanced animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
+    .floating-brain { animation: float 3s ease-in-out infinite; }
+
+    /* Particle container */
+    #particles-js {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+    /* Login card styles */
+    .login-container {
+        background: rgba(30, 30, 30, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--primary-500);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 159, 220, 0.2);
+    }
+
+    .login-btn {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 159, 220, 0.3);
+    }
+
+    .social-login-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .social-login-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .form-checkbox {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<!-- Particle background -->
+<div id="particles-js"></div>
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
     <div class="max-w-md w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Sign in to MindDuel
-            </h2>
-        </div>
-        <form class="mt-8 space-y-6" method="POST">
-            {% csrf_token %}
-            <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                    <label for="id_username" class="sr-only">Username</label>
-                    {{ form.username }}
+        <div class="login-container animate-fadeIn">
+            <!-- Logo/Brain Icon -->
+            <div class="text-center mb-8">
+                <div class="floating-brain mx-auto w-24 h-24 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 3.96-.44Z"/>
+                        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-3.96-.44Z"/>
+                    </svg>
                 </div>
-                <div>
-                    <label for="id_password" class="sr-only">Password</label>
-                    {{ form.password }}
-                </div>
+                <h2 class="text-3xl font-bold text-white mb-2">Welcome Back!</h2>
+                <p class="text-white text-opacity-80">Ready to challenge your mind?</p>
             </div>
 
-            {% if form.errors %}
-            <div class="text-red-500 text-sm">
-                {{ form.non_field_errors }}
-            </div>
-            {% endif %}
+            <form class="mt-8 space-y-6" method="POST">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label for="id_username" class="block text-sm font-medium text-white mb-2">Username</label>
+                        {{ form.username }}
+                    </div>
+                    <div>
+                        <label for="id_password" class="block text-sm font-medium text-white mb-2">Password</label>
+                        {{ form.password }}
+                    </div>
+                </div>
 
-            <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Sign in
-                </button>
+                <!-- Remember me and Forgot password -->
+                <div class="flex items-center justify-between mt-4">
+                    <div class="flex items-center">
+                        {{ form.remember_me }}
+                        <label for="{{ form.remember_me.id_for_label }}" class="ml-2 text-white text-opacity-80">Remember me</label>
+                    </div>
+                    <a href="{% url 'accounts:password_reset' %}" class="text-primary-400 hover:text-primary-300">
+                        Forgot password?
+                    </a>
+                </div>
+
+                {% if form.errors %}
+                <div class="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mt-4">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div>
+                    <button type="submit" class="login-btn w-full">
+                        Sign in to Play
+                    </button>
+                </div>
+
+                <!-- Social Login -->
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-white border-opacity-10"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-[#1e1e1e] text-white text-opacity-80">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-2 gap-3">
+                        <button type="button" class="social-login-btn">
+                            <img src="{% static 'images/google.svg' %}" class="w-5 h-5 mr-2" alt="Google">
+                            Google
+                        </button>
+                        <button type="button" class="social-login-btn">
+                            <img src="{% static 'images/github.svg' %}" class="w-5 h-5 mr-2" alt="GitHub">
+                            GitHub
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-white text-opacity-80">
+                    Don't have an account?
+                    <a href="{% url 'accounts:register' %}" class="text-primary-400 hover:text-primary-300 font-medium transition-colors">
+                        Join the Challenge
+                    </a>
+                </p>
             </div>
-        </form>
-        <div class="text-center">
-            <p class="text-sm text-gray-600">
-                Don't have an account? 
-                <a href="{% url 'accounts:register' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Register here
-                </a>
-            </p>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+    console.log('DEBUG: Template JS loaded'); // Debug line
+
+    // Initialize particles background
+    particlesJS('particles-js', {
+        particles: {
+            number: { value: 80, density: { enable: true, value_area: 800 } },
+            color: { value: '#1a1a1a' },
+            shape: { type: 'circle' },
+            opacity: { value: 0.3, random: false },
+            size: { value: 3, random: true },
+            line_linked: { enable: true, distance: 150, color: '#1a1a1a', opacity: 0.3, width: 1 },
+            move: { enable: true, speed: 3, direction: 'none', random: true }
+        },
+        interactivity: {
+            detect_on: 'canvas',
+            events: {
+                onhover: { enable: true, mode: 'repulse' },
+                onclick: { enable: true, mode: 'push' },
+                resize: true
+            }
+        }
+    });
+</script>
 {% endblock %}

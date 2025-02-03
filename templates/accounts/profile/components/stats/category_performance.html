@@ -1,0 +1,46 @@
+<!-- templates/profile/components/stats/category_performance.html -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+    <!-- Logical Reasoning -->
+    <div class="stat-card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-400">Logical Reasoning</h3>
+            <span class="text-[#009fdc] font-bold">{{ user.performance_metrics.logical_reasoning_accuracy|floatformat:1 }}%</span>
+        </div>
+        <div class="progress-bar mb-2">
+            <div class="progress-fill" style="width: {{ user.performance_metrics.logical_reasoning_accuracy }}%"></div>
+        </div>
+    </div>
+
+    <!-- Verbal Linguistic -->
+    <div class="stat-card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-400">Verbal Linguistic</h3>
+            <span class="text-[#009fdc] font-bold">{{ user.performance_metrics.verbal_linguistic_accuracy|floatformat:1 }}%</span>
+        </div>
+        <div class="progress-bar mb-2">
+            <div class="progress-fill" style="width: {{ user.performance_metrics.verbal_linguistic_accuracy }}%"></div>
+        </div>
+    </div>
+
+    <!-- Spatial Reasoning -->
+    <div class="stat-card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-400">Spatial Reasoning</h3>
+            <span class="text-[#009fdc] font-bold">{{ user.performance_metrics.spatial_reasoning_accuracy|floatformat:1 }}%</span>
+        </div>
+        <div class="progress-bar mb-2">
+            <div class="progress-fill" style="width: {{ user.performance_metrics.spatial_reasoning_accuracy }}%"></div>
+        </div>
+    </div>
+
+    <!-- Critical Thinking -->
+    <div class="stat-card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-400">Critical Thinking</h3>
+            <span class="text-[#009fdc] font-bold">{{ user.performance_metrics.critical_thinking_accuracy|floatformat:1 }}%</span>
+        </div>
+        <div class="progress-bar mb-2">
+            <div class="progress-fill" style="width: {{ user.performance_metrics.critical_thinking_accuracy }}%"></div>
+        </div>
+    </div>
+</div>

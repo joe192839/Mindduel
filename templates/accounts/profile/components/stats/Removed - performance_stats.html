@@ -1,0 +1,32 @@
+<!-- templates/profile/components/stats/performance_stats.html -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Streak Stats -->
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-1">Current Streak</h3>
+        <p class="text-3xl font-bold">{{ user.performance_metrics.correct_answers_streak }}</p>
+        <p class="text-sm text-gray-400 mt-1">Highest: {{ user.performance_metrics.highest_streak }}</p>
+    </div>
+    
+    <!-- Response Time Stats -->
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-1">Avg Response Time</h3>
+        <p class="text-3xl font-bold">{{ user.performance_metrics.avg_response_time|floatformat:1 }}s</p>
+        <p class="text-sm text-gray-400 mt-1">Best: {{ user.performance_metrics.fastest_correct_answer|floatformat:1 }}s</p>
+    </div>
+    
+    <!-- Weekly Improvement -->
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-1">Weekly Progress</h3>
+        <p class="text-3xl font-bold {% if user.performance_metrics.weekly_improvement_rate > 0 %}text-green-500{% endif %}">
+            {% if user.performance_metrics.weekly_improvement_rate > 0 %}+{% endif %}{{ user.performance_metrics.weekly_improvement_rate|floatformat:1 }}%
+        </p>
+        <p class="text-sm text-gray-400 mt-1">Improvement Rate</p>
+    </div>
+    
+    <!-- Total Questions -->
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-1">Questions Answered</h3>
+        <p class="text-3xl font-bold">{{ user.performance_metrics.total_questions_answered }}</p>
+        <p class="text-sm text-gray-400 mt-1">Last 30 days</p>
+    </div>
+</div>

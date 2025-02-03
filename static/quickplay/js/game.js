@@ -28,7 +28,6 @@ class QuickplayGame {
         
         // Initialize UI components
         this.heartStateManager = new HeartStateManager(this.domManager);
-        // Change this line:
         this.animationManager = new AnimationManager(this.domManager);  // Pass domManager here
         
         // Initialize utility components
@@ -39,6 +38,7 @@ class QuickplayGame {
         this.domManager.updateSoundIcon(this.audioManager.isSoundEnabled());
         this.domManager.setGameHeaderState(false);
     }
+
     setupEventListeners() {
         // Start button
         if (this.domManager.startButton) {
@@ -64,12 +64,12 @@ class QuickplayGame {
             }
         });
         const questionTypeToggle = document.getElementById('questionTypeToggle');
-    if (questionTypeToggle) {
-        questionTypeToggle.addEventListener('click', () => {
-            this.apiService.setUseAIQuestions(!this.apiService.useAIQuestions);
-            questionTypeToggle.textContent = `Question Mode: ${this.apiService.useAIQuestions ? 'AI' : 'Regular'}`;
-        });
-    }
+        if (questionTypeToggle) {
+            questionTypeToggle.addEventListener('click', () => {
+                this.apiService.setUseAIQuestions(!this.apiService.useAIQuestions);
+                questionTypeToggle.textContent = `Question Mode: ${this.apiService.useAIQuestions ? 'AI' : 'Regular'}`;
+            });
+        }
     }
 
     async startGame() {
@@ -78,15 +78,49 @@ class QuickplayGame {
         }
     
         try {
+            console.log('Starting game...');
+            
+            // Get categories from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedCategories = urlParams.getAll('categories');
+            
+            // Store categories in sessionStorage
+            sessionStorage.setItem('selectedCategories', JSON.stringify(selectedCategories));
+            
+            console.log('Selected categories:', selectedCategories);
+            
+            // Log the API service state
+            console.log('API Service state:', {
+                urls: this.apiService.urls,
+                gameState: this.gameState
+            });
+    
             // Start both the animation and game data loading in parallel
             const [gameData] = await Promise.all([
-                this.apiService.startGame(),
-                this.animationManager.showBrainWarmup()
+                this.apiService.startGame().catch(error => {
+                    console.error('Failed to start game:', error);
+                    throw error;
+                }),
+                this.animationManager.showBrainWarmup().catch(error => {
+                    console.error('Animation error:', error);
+                    return null; // Don't fail the game if animation fails
+                })
             ]);
+    
+            console.log('Game started successfully:', gameData);
+    
+            if (!gameData || !gameData.game_id) {
+                throw new Error('Invalid game data received');
+            }
     
             this.enterFullscreenMode();
             this.gameState.initializeGame(gameData.game_id);
             
+            console.log('Game state initialized:', {
+                gameId: this.gameState.gameId,
+                isActive: this.gameState.isGameActive
+            });
+    
             this.timer.initializeTimerStructure();
             this.domManager.setGameHeaderState(true);
             
@@ -101,12 +135,24 @@ class QuickplayGame {
             await this.loadQuestion();
             
         } catch (error) {
-            console.error('Error during end game:', error);
-            window.location.href = this.gameState.gameId === 'anonymous' ? 
-                this.apiService.urls.anonymousResults : 
-                `${this.apiService.urls.results}${this.gameState.gameId}/`;
-        
+            console.error('Error starting game:', error);
+            console.error('Stack trace:', error.stack);
+            
+            // Re-enable start button
+            if (this.domManager.startButton) {
+                this.domManager.startButton.disabled = false;
+            }
+    
             this.domManager.showError(`Failed to start game: ${error.message}`);
+            
+            // Don't redirect immediately on error
+            if (this.gameState && this.gameState.gameId) {
+                setTimeout(() => {
+                    window.location.href = this.gameState.gameId === 'anonymous' ? 
+                        this.apiService.urls.anonymousResults : 
+                        `${this.apiService.urls.results}${this.gameState.gameId}/`;
+                }, 2000);
+            }
         }
     }
 

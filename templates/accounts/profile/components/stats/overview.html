@@ -1,0 +1,171 @@
+<!-- templates/profile/components/stats/overview.html -->
+{% load static %}
+
+<!-- Main container with left-right split -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column (1/3) - Accuracy Metrics -->
+    <div class="space-y-4">
+        <!-- Overview Accuracy -->
+        <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700 transition-all duration-300 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-gray-400 text-sm font-medium">Overview Accuracy</h3>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-white">{{ overview_correct }}/{{ overview_total }}</span>
+                    <span class="text-gray-400 text-sm ml-2">({{ overview_percentage }}%)</span>
+                </div>
+            </div>
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" 
+                     style="width: {{ overview_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Logical Reasoning -->
+        <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700 transition-all duration-300 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-gray-400 text-sm font-medium">Logical Reasoning</h3>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-white">{{ logical_correct }}/{{ logical_total }}</span>
+                    <span class="text-gray-400 text-sm ml-2">({{ logical_percentage }}%)</span>
+                </div>
+            </div>
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full" 
+                     style="width: {{ logical_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Verbal Linguistic -->
+        <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700 transition-all duration-300 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-gray-400 text-sm font-medium">Verbal Linguistic</h3>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-white">{{ verbal_correct }}/{{ verbal_total }}</span>
+                    <span class="text-gray-400 text-sm ml-2">({{ verbal_percentage }}%)</span>
+                </div>
+            </div>
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" 
+                     style="width: {{ verbal_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Spatial Reasoning -->
+        <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700 transition-all duration-300 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-gray-400 text-sm font-medium">Spatial Reasoning</h3>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-white">{{ spatial_correct }}/{{ spatial_total }}</span>
+                    <span class="text-gray-400 text-sm ml-2">({{ spatial_percentage }}%)</span>
+                </div>
+            </div>
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" 
+                     style="width: {{ spatial_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Critical Thinking -->
+        <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700 transition-all duration-300 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-gray-400 text-sm font-medium">Critical Thinking</h3>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-white">{{ critical_correct }}/{{ critical_total }}</span>
+                    <span class="text-gray-400 text-sm ml-2">({{ critical_percentage }}%)</span>
+                </div>
+            </div>
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" 
+                     style="width: {{ critical_percentage }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column (2/3) - Game Stats and Match History -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Basic Game Facts -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="text-gray-400 text-sm font-medium mb-2">Total Games</h3>
+                <p class="text-3xl font-bold text-white">{{ total_games }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="text-gray-400 text-sm font-medium mb-2">Average Score</h3>
+                <p class="text-3xl font-bold text-white">{{ avg_score }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="text-gray-400 text-sm font-medium mb-2">Highest Score</h3>
+                <p class="text-3xl font-bold text-white">{{ highest_score }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="text-gray-400 text-sm font-medium mb-2">Win Rate</h3>
+                <p class="text-3xl font-bold text-white">{{ win_rate }}%</p>
+            </div>
+        </div>
+
+        <!-- Match History Table -->
+<div class="bg-slate-800 rounded-xl overflow-hidden">
+    <div class="p-6 border-b border-slate-700">
+        <h3 class="text-xl font-semibold text-white">Match History</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for game in game_history %}
+                <tr class="hover:bg-slate-700 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {{ game.start_time|date:"M d, Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {{ game.score|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {% with first_answer=game.quickplayanswer_set.first %}
+                            {% if first_answer %}
+                                {% with category=first_answer.question.category %}
+                                    {{ category|title|cut:"_" }}
+                                {% endwith %}
+                            {% else %}
+                                All
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {% if game.start_time and game.end_time %}
+                            {{ game.end_time|timeuntil:game.start_time }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        {% if game.is_completed %}
+                            {% if game.score >= 70 %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400">Won</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-500/20 text-red-400">Lost</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400">Incomplete</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-400">
+                        No games played yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

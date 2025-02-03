@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'django_browser_reload',
     'quickplay',
     'accounts',
-    'rest_framework',  # Added for AI API endpoints
+    'django_countries',
+    'rest_framework',  
 ]
 
 # REST Framework settings
@@ -179,10 +180,11 @@ if not DEBUG:
 # Content Security Policy
 if not DEBUG:
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
-    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")  # Added for Google Fonts
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net")  # Added for particles.js
     CSP_IMG_SRC = ("'self'", "data:", "https:")
-    CSP_FONT_SRC = ("'self'", "https:", "data:")
+    CSP_FONT_SRC = ("'self'", "https:", "data:", "https://fonts.gstatic.com")  # Added for Google Fonts
+    CSP_CONNECT_SRC = ("'self'",)  # Added for completeness
 
 # Tailwind configuration
 TAILWIND_APP_NAME = 'theme'
@@ -201,35 +203,43 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
-        'loggers': {
-            'django.security.csrf': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': True,
-            },
-        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+        },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
+        },
+        'django.security.csrf': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.template': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
     },
 }
 
 # Authentication settings
-LOGIN_URL = 'login'
+LOGIN_URL = 'accounts:login'  # Updated to use namespaced URL
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 

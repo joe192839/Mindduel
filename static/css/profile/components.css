@@ -1,0 +1,144 @@
+/* static/css/profile/components.css */
+
+/* Profile header styles */
+.profile-header {
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(0, 159, 220, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    border: 3px solid #009fdc;
+    animation: glow 3s infinite;
+}
+
+/* Stats cards */
+.stat-card {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(0, 159, 220, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 159, 220, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 159, 220, 0.2);
+}
+
+/* Stats tabs */
+.stats-tabs {
+    display: flex;
+    background: rgba(30, 30, 30, 0.8);
+    border-radius: 12px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-tab {
+    flex: 1;
+    padding: 0.75rem;
+    text-align: center;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.stats-tab.active {
+    background: rgba(0, 159, 220, 0.2);
+    color: #009fdc;
+}
+
+/* Category stats */
+.category-stat {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(0, 159, 220, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.category-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Progress bars */
+.progress-bar {
+    height: 8px;
+    background: rgba(0, 159, 220, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #009fdc, #00c3dc);
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+
+/* Match history */
+.match-row {
+    transition: all 0.2s ease;
+}
+
+.match-row:hover {
+    background: rgba(0, 159, 220, 0.1);
+}
+
+/* Category tags */
+.category-tag {
+    background: rgba(0, 159, 220, 0.1);
+    border: 1px solid rgba(0, 159, 220, 0.3);
+    border-radius: 12px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    color: #009fdc;
+}
+
+
+
+/* Form elements */
+.form-select, .form-input {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(0, 159, 220, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    color: white;
+}
+
+.form-select:focus, .form-input:focus {
+    border-color: #009fdc;
+    outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 1rem;
+    }
+    
+    .stats-tabs {
+        flex-direction: column;
+    }
+    
+    .stats-tab {
+        margin-bottom: 0.5rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+}

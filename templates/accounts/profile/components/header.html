@@ -1,0 +1,104 @@
+{% load static %}
+<!-- templates/profile/components/header.html -->
+<div class="profile-header bg-gray-900 p-6 rounded-lg shadow-lg">
+    <div class="flex items-center justify-between gap-6">
+        <!-- Photo Section -->
+        <div class="relative w-32 flex-shrink-0">
+            {% if user.profile_photo %}
+                <img src="{{ user.profile_photo.url }}" alt="{{ user.username }}" class="w-32 h-32 rounded-lg object-cover">
+            {% else %}
+                <div class="w-32 h-32 rounded-lg bg-gray-800 flex items-center justify-center">
+                    <span class="text-4xl">{{ user.username|make_list|first|upper }}</span>
+                </div>
+            {% endif %}
+            <label for="profile-upload" class="absolute bottom-2 right-2 bg-[#009fdc] p-2 rounded-full cursor-pointer hover:bg-[#007bb5] transition-all duration-300">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </label>
+            <input type="file" id="profile-upload" class="hidden" accept="image/*">
+        </div>
+
+        <!-- Name, Flag and Level Section -->
+        <div class="flex flex-col flex-grow">
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-3xl font-bold">{{ user.username }}</h1>
+                <!-- Flag Section (Moved here) -->
+                <div class="relative">
+                    <div id="flag-display" 
+                         class="cursor-pointer p-1 hover:bg-gray-800 rounded-lg transition-all duration-300"
+                         onclick="toggleFlagSelector()">
+                        {% if user.country_code %}
+                            <img src="https://flagcdn.com/32x24/{{ user.country_code|lower }}.png"
+                                 alt="{{ user.country_code }}" 
+                                 class="w-8 h-6">
+                        {% else %}
+                            <div class="w-8 h-6 border border-gray-600 flex items-center justify-center">
+                                <span class="text-sm text-gray-400">🏳️</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Flag Selector Dropdown -->
+                    <div id="flag-selector" 
+                         class="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-lg p-4 hidden z-50 w-64 max-h-96 overflow-y-auto">
+                        <input type="text" 
+                               id="flag-search" 
+                               placeholder="Search countries..." 
+                               class="w-full bg-gray-700 text-white rounded px-3 py-2 mb-3 focus:ring-2 focus:ring-[#009fdc] focus:outline-none">
+                        <div id="flag-options" class="grid grid-cols-2 gap-2">
+                            {% for code, name in countries %}
+                                <div class="flag-option flex items-center gap-2 p-2 hover:bg-gray-700 rounded cursor-pointer"
+                                     data-code="{{ code|lower }}"
+                                     onclick="selectCountry('{{ code|lower }}')">
+                                    <img src="https://flagcdn.com/32x24/{{ code|lower }}.png" 
+                                         alt="{{ name }}" 
+                                         class="w-6 h-4">
+                                    <span class="text-sm text-gray-200">{{ name }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <!-- Debug Information -->
+                <div class="text-sm text-gray-400 mb-1">
+                    Debug - Progress: {{ level_progress|default:0 }}%, Games: {{ total_games|default:0 }}
+                </div>
+                <span class="text-xl font-semibold">Level {{ current_level }}</span>
+                <div class="w-1/2 bg-gray-700 rounded-full h-3 mt-2">
+                    <div class="bg-[#009fdc] h-3 rounded-full transition-all duration-300"
+                        style="width: {{ level_progress|default:0 }}%"></div>
+                </div>
+                <span class="text-sm text-gray-400 mt-1">{{ total_games|default:0 }} / {{ next_level_threshold|default:5 }} XP</span>
+            </div>
+        </div>
+
+        <!-- Badges/Achievements Section -->
+        <div class="flex-shrink-0 flex items-center gap-2">
+            {% for badge in user.badges.all %}
+                <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center"
+                    title="{{ badge.name }}">
+                    {% if badge.icon %}
+                        <img src="{{ badge.icon.url }}" alt="{{ badge.name }}" class="w-8 h-8">
+                    {% else %}
+                        <span class="text-2xl">🏆</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Rank Section -->
+        <div class="flex-shrink-0 text-center w-24">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#009fdc] to-[#007bb5] flex items-center justify-center mx-auto mb-1">
+                <span class="text-2xl font-bold">{{ rank }}</span>
+            </div>
+            <span class="text-sm text-gray-400">Rank</span>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+<script src="{% static 'js/flag-selector.js' %}"></script>

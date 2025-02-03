@@ -1,0 +1,17 @@
+<!-- templates/profile/components/stats/timing.html -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-1">Average Answer Time</h3>
+        <p class="text-3xl font-bold">{{ avg_answer_time }}s</p>
+        <p class="text-sm text-gray-400 mt-2">Across all categories</p>
+    </div>
+    <div class="stat-card">
+        <h3 class="text-gray-400 mb-3">Category Timing</h3>
+        {% for category, time in category_timing.items %}
+        <div class="flex justify-between items-center mb-2">
+            <span>{{ category }}</span>
+            <span class="font-bold">{{ time }}s</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>

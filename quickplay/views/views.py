@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views import View
-from ..models import QuickplayGame, QuickplayQuestion, QuickplayAnswer, Leaderboard
+from ..models import QuickplayGame, QuickplayQuestion, QuickplayAnswer, Leaderboard, Category
 from django.utils import timezone
 from django.db.models import Count, Avg
 from django.db import DatabaseError
@@ -149,6 +149,7 @@ def quickplay_results(request, game_id=None):
         })
     
     return render(request, 'quickplay/results.html', context)
+
 def start_game(request):
     """API endpoint to start a new game."""
     if request.method != 'POST':
@@ -159,17 +160,26 @@ def start_game(request):
         selected_categories = request.session.get('selected_categories', [])
         
         if request.user.is_authenticated:
+            # End any existing active games
             QuickplayGame.objects.filter(
                 player=request.user,
                 is_completed=False
             ).update(is_completed=True)
             
+            # Create new game first
             game = QuickplayGame.objects.create(
                 player=request.user,
                 start_time=timezone.now(),
                 time_limit=120,
-                categories=','.join(selected_categories) if selected_categories else ''
+                categories_string=','.join(selected_categories) if selected_categories else ''
             )
+            
+            # Then handle M2M relationship for categories if they exist
+            if selected_categories:
+                category_names = [cat.lower().replace(' ', '_') for cat in selected_categories]
+                categories = Category.objects.filter(name__in=category_names)
+                game.categories.set(categories)
+            
             logger.info(f"Started new game with ID: {game.id}")
             return JsonResponse({'game_id': str(game.id)})
         else:
@@ -366,8 +376,7 @@ def end_game(request, game_id=None):
                 game.save()
                 
                 time_taken = (game.end_time - game.start_time).seconds
-                Leaderboard.objects.create(
-                    player=request.user,
+                Leaderboard.objects.create(player=request.user,
                     score=game.score,
                     time_taken=time_taken
                 )

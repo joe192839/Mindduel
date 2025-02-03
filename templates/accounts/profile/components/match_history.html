@@ -1,0 +1,65 @@
+<!-- templates/profile/components/match_history.html -->
+<div class="bg-[#1e1e1e] rounded-lg p-6 border border-[#009fdc]/20">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Match History</h2>
+        <div class="flex gap-4">
+            <select class="bg-gray-800 text-white rounded-md px-3 py-1 text-sm border border-gray-700">
+                <option>All Games</option>
+                <option>Wins</option>
+                <option>Losses</option>
+            </select>
+            <input type="date" class="bg-gray-800 text-white rounded-md px-3 py-1 text-sm border border-gray-700">
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="border-b border-gray-800">
+                <tr>
+                    <th class="text-left py-3 text-gray-400">Date</th>
+                    <th class="text-left py-3 text-gray-400">Score</th>
+                    <th class="text-left py-3 text-gray-400">Categories</th>
+                    <th class="text-left py-3 text-gray-400">Time</th>
+                    <th class="text-left py-3 text-gray-400">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if game_history %}
+                    {% for game in game_history %}
+                    <tr class="match-row border-b border-gray-800">
+                        <td class="py-4">{{ game.start_time|date:"M d, Y" }}</td>
+                        <td class="py-4 {% if game.score > avg_score %}text-[#009fdc]{% endif %}">
+                            {{ game.score }}
+                        </td>
+                        <td class="py-4">
+                            <div class="flex flex-wrap gap-2">
+                                {% for category in game.categories.all %}
+                                    <span class="category-tag">{{ category.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="py-4">{{ game.duration }}</td>
+                        <td class="py-4">
+                            {% if game.is_completed %}
+                                <span class="bg-[#009fdc]/20 text-[#009fdc] px-2 py-1 rounded-full text-sm">
+                                    Completed
+                                </span>
+                            {% else %}
+                                <span class="bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded-full text-sm">
+                                    In Progress
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="py-4 text-center text-gray-400">
+                            No games played yet. Start playing to see your match history!
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

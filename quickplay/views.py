@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views import View
-from .models import QuickplayGame, QuickplayQuestion, QuickplayAnswer, Leaderboard
+from .models import QuickplayGame, QuickplayQuestion, QuickplayAnswer, Leaderboard, Category
 from django.utils import timezone
 from django.db.models import Count, Avg
 from django.db import DatabaseError
@@ -149,30 +149,68 @@ def quickplay_results(request, game_id=None):
         })
     
     return render(request, 'quickplay/results.html', context)
+
 def start_game(request):
     """API endpoint to start a new game."""
+    logger.info(f"Start game called - User authenticated: {request.user.is_authenticated}")
+    
     if request.method != 'POST':
+        logger.error("Invalid request method")
         return JsonResponse({'error': 'Invalid request method'}, status=400)
     
     try:
-        # Get selected categories from session
-        selected_categories = request.session.get('selected_categories', [])
+        # Get selected categories from POST data
+        selected_categories_json = request.POST.get('selected_categories', '[]')
+        try:
+            selected_categories = json.loads(selected_categories_json)
+        except json.JSONDecodeError:
+            selected_categories = []
+            
+        logger.info(f"Selected categories from request: {selected_categories}")
         
         if request.user.is_authenticated:
-            QuickplayGame.objects.filter(
+            logger.info("Creating game for authenticated user")
+            # End any existing active games
+            active_games = QuickplayGame.objects.filter(
                 player=request.user,
                 is_completed=False
-            ).update(is_completed=True)
+            )
+            if active_games.exists():
+                logger.info(f"Ending {active_games.count()} active games")
+                active_games.update(is_completed=True)
             
+            # Create game with categories string
+            categories_string = ','.join(selected_categories) if selected_categories else ''
             game = QuickplayGame.objects.create(
                 player=request.user,
                 start_time=timezone.now(),
                 time_limit=120,
-                categories=','.join(selected_categories) if selected_categories else ''
+                categories_string=categories_string
             )
-            logger.info(f"Started new game with ID: {game.id}")
+            
+            # Handle categories using the correct category values from CATEGORY_CHOICES
+            if selected_categories:
+                category_objects = []
+                category_mapping = {choice[1].lower().replace(' ', '_'): choice[0] 
+                                 for choice in QuickplayQuestion.CATEGORY_CHOICES}
+                
+                for category_name in selected_categories:
+                    # Convert frontend category name to model choice value
+                    category_key = category_name.lower().replace(' ', '_')
+                    if category_key in category_mapping:
+                        category, _ = Category.objects.get_or_create(
+                            name=category_mapping[category_key]
+                        )
+                        category_objects.append(category)
+                
+                if category_objects:
+                    game.categories.set(category_objects)
+                    game.save()
+            
+            logger.info(f"Created new game with ID: {game.id}")
             return JsonResponse({'game_id': str(game.id)})
         else:
+            logger.info("Creating game state for anonymous user")
             # Initialize game state for anonymous user
             game_state = {
                 'score': 0,
@@ -183,61 +221,71 @@ def start_game(request):
                 'categories': selected_categories
             }
             request.session['quickplay_game'] = game_state
+            logger.info("Anonymous game state created")
             return JsonResponse({'game_id': 'anonymous'})
     except Exception as e:
-        logger.error(f"Failed to start game: {e}")
+        logger.error(f"Failed to start game: {str(e)}", exc_info=True)
         return JsonResponse({'error': str(e)}, status=500)
 
 def get_question(request):
     """API endpoint to get a new question."""
-    selected_categories = request.session.get('selected_categories', [])
-    print(f"Getting question for categories: {selected_categories}")  # Debug log
     game_id = request.GET.get('game_id')
+    logger.info(f"Getting question for game_id: {game_id}")
     
-    if request.user.is_authenticated and game_id != 'anonymous':
-        try:
+    try:
+        if request.user.is_authenticated and game_id != 'anonymous':
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
             if game.is_completed:
-                print("Game is already completed")  # Debug log
+                logger.info("Game is already completed")
                 return JsonResponse({'status': 'game_over'})
+            
+            # Get categories from either the M2M field or legacy field
+            category_names = game.get_categories_list()
+            logger.info(f"Game categories: {category_names}")
             
             answered_questions = QuickplayAnswer.objects.filter(game=game)\
                 .values_list('question_id', flat=True)
-            print(f"Already answered questions: {list(answered_questions)}")  # Debug log
-        except Exception as e:
-            logger.error(f"Error fetching game data: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
-        game_state = request.session.get('quickplay_game', {})
-        if not game_state:
-            print("No active game found")  # Debug log
-            return JsonResponse({'error': 'No active game'}, status=400)
-        answered_questions = game_state.get('answered_questions', [])
-    
-    try:
-        questions = QuickplayQuestion.objects.exclude(id__in=answered_questions)
-        print(f"Found {questions.count()} questions before category filter")  # Debug log
-        
-        if selected_categories:
-            questions = questions.filter(category__in=selected_categories)
-            print(f"Found {questions.count()} questions after category filter")  # Debug log
+        else:
+            game_state = request.session.get('quickplay_game', {})
+            if not game_state:
+                logger.error("No active game found")
+                return JsonResponse({'error': 'No active game'}, status=400)
             
+            category_names = game_state.get('categories', [])
+            answered_questions = game_state.get('answered_questions', [])
+        
+        # Query available questions
+        questions = QuickplayQuestion.objects.exclude(id__in=answered_questions)
+        logger.info(f"Found {questions.count()} questions before category filter")
+        
+        if category_names:
+            # Map frontend category names to model choices
+            category_mapping = {choice[1].lower().replace(' ', '_'): choice[0] 
+                             for choice in QuickplayQuestion.CATEGORY_CHOICES}
+            category_values = [category_mapping[cat.lower().replace(' ', '_')] 
+                             for cat in category_names 
+                             if cat.lower().replace(' ', '_') in category_mapping]
+            
+            questions = questions.filter(category__in=category_values)
+            logger.info(f"Found {questions.count()} questions after category filter")
+        
         if not questions.exists():
-            print("No questions found - game over")  # Debug log
+            logger.info("No more questions available")
             return JsonResponse({'status': 'game_over'})
         
         question = random.choice(list(questions))
         return JsonResponse({
-    'id': question.id,
-    'question_text': question.question_text,
-    'option_1': question.option_1,
-    'option_2': question.option_2,
-    'option_3': question.option_3,
-    'option_4': question.option_4,
-    'category': question.category  
-})
+            'id': question.id,
+            'question_text': question.question_text,
+            'option_1': question.option_1,
+            'option_2': question.option_2,
+            'option_3': question.option_3,
+            'option_4': question.option_4,
+            'category': question.category
+        })
+        
     except Exception as e:
-        logger.error(f"Error getting question: {e}")
+        logger.error(f"Error getting question: {e}", exc_info=True)
         return JsonResponse({'error': str(e)}, status=500)
 
 def submit_answer(request):
@@ -257,7 +305,6 @@ def submit_answer(request):
         is_correct = answer.lower() == question.correct_answer.lower()
         
         if request.user.is_authenticated and game_id != 'anonymous':
-            # [Keep existing authenticated user code unchanged]
             game = get_object_or_404(QuickplayGame, id=game_id, player=request.user)
             
             if game.is_completed:
